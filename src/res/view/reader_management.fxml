@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.ReaderController" spacing="10">
+
+    <padding>
+        <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
+
+    <!-- Thanh tìm kiếm -->
+    <HBox spacing="5">
+        <TextField fx:id="searchField" promptText="Tìm kiếm theo tên hoặc số điện thoại..."/>
+        <Button text="Tìm" onAction="#handleSearch"/>
+        <Button text="Thêm mới" onAction="#handleAdd"/>
+        <Button text="Sửa" onAction="#handleEdit"/>
+        <Button text="Khóa/Mở tài khoản" onAction="#handleToggleStatus"/>
+    </HBox>
+
+    <!-- Bảng danh sách độc giả -->
+    <TableView fx:id="readerTable" prefHeight="400" prefWidth="700">
+        <columns>
+            <TableColumn text="ID" prefWidth="50" fx:id="colId"/>
+            <TableColumn text="Họ tên" prefWidth="150" fx:id="colFullName"/>
+            <TableColumn text="Ngày sinh" prefWidth="100" fx:id="colBirthDate"/>
+            <TableColumn text="Địa chỉ" prefWidth="200" fx:id="colAddress"/>
+            <TableColumn text="SĐT" prefWidth="100" fx:id="colPhone"/>
+            <TableColumn text="Email" prefWidth="150" fx:id="colEmail"/>
+        </columns>
+    </TableView>
+
+    <!-- Tab Pane hiển thị chi tiết lịch sử -->
+    <TabPane>
+        <Tab text="Lịch sử mượn">
+            <TableView fx:id="loanHistoryTable" prefHeight="150"/>
+        </Tab>
+        <Tab text="Lịch sử vi phạm">
+            <TableView fx:id="fineHistoryTable" prefHeight="150"/>
+        </Tab>
+        <Tab text="Lịch sử thanh toán">
+            <TableView fx:id="invoiceHistoryTable" prefHeight="150"/>
+        </Tab>
+    </TabPane>
+
+</VBox>
