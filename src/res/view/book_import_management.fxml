@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.BookImportManagementController" spacing="10">
+
+    <padding>
+        <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
+
+    <TabPane>
+
+        <Tab text="Nhà cung cấp">
+            <VBox spacing="5">
+                <HBox spacing="5">
+                    <Button text="Thêm" onAction="#handleAddSupplier"/>
+                    <Button text="Sửa" onAction="#handleEditSupplier"/>
+                    <Button text="Xóa" onAction="#handleDeleteSupplier"/>
+                </HBox>
+                <TableView fx:id="supplierTable" prefHeight="300">
+                    <columns>
+                        <TableColumn fx:id="colSupplierId" text="ID" prefWidth="50"/>
+                        <TableColumn fx:id="colCompanyName" text="Tên công ty" prefWidth="200"/>
+                        <TableColumn fx:id="colPhone" text="Điện thoại" prefWidth="120"/>
+                        <TableColumn fx:id="colEmail" text="Email" prefWidth="200"/>
+                        <TableColumn fx:id="colAddress" text="Địa chỉ" prefWidth="250"/>
+                        <TableColumn fx:id="colContactPerson" text="Người liên hệ" prefWidth="150"/>
+                    </columns>
+                </TableView>
+            </VBox>
+        </Tab>
+
+        <Tab text="Phiếu nhập sách">
+            <VBox spacing="5">
+                <HBox spacing="5">
+                    <Button text="Thêm" onAction="#handleAddBookImport"/>
+                    <Button text="Sửa" onAction="#handleEditBookImport"/>
+                    <Button text="Xóa" onAction="#handleDeleteBookImport"/>
+                </HBox>
+                <TableView fx:id="bookImportTable" prefHeight="300">
+                    <columns>
+                        <TableColumn fx:id="colImportId" text="ID" prefWidth="50"/>
+                        <TableColumn fx:id="colOrderDate" text="Ngày đặt" prefWidth="150"/>
+                        <TableColumn fx:id="colReceiveDate" text="Ngày nhận" prefWidth="150"/>
+                        <TableColumn fx:id="colSupplierName" text="Nhà cung cấp" prefWidth="250"/>
+                    </columns>
+                </TableView>
+            </VBox>
+        </Tab>
+
+        <Tab text="Chi tiết nhập sách">
+            <VBox spacing="5">
+                <HBox spacing="5">
+                    <Button text="Thêm" onAction="#handleAddBookImportDetail"/>
+                    <Button text="Sửa" onAction="#handleEditBookImportDetail"/>
+                    <Button text="Xóa" onAction="#handleDeleteBookImportDetail"/>
+                </HBox>
+                <TableView fx:id="bookImportDetailTable" prefHeight="300">
+                    <columns>
+                        <TableColumn fx:id="colImportDetailId" text="ID" prefWidth="50"/>
+                        <TableColumn fx:id="colQuantity" text="Số lượng" prefWidth="100"/>
+                        <TableColumn fx:id="colPricePerUnit" text="Giá/unit" prefWidth="120"/>
+                        <TableColumn fx:id="colTitleName" text="Tên sách" prefWidth="250"/>
+                        <TableColumn fx:id="colImportRef" text="Phiếu nhập" prefWidth="150"/>
+                    </columns>
+                </TableView>
+            </VBox>
+        </Tab>
+
+    </TabPane>
+</VBox>
