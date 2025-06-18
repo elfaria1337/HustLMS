@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.LoanManagementController" spacing="10">
+
+    <padding>
+        <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
+
+    <TabPane>
+
+        <Tab text="Phiếu mượn">
+            <VBox spacing="5">
+                <HBox spacing="5">
+                    <Button text="Thêm" onAction="#handleAddLoan"/>
+                    <Button text="Sửa" onAction="#handleEditLoan"/>
+                    <Button text="Xóa" onAction="#handleDeleteLoan"/>
+                </HBox>
+                <TableView fx:id="loanTable" prefHeight="300">
+                    <columns>
+                        <TableColumn fx:id="colLoanId" text="ID" prefWidth="50"/>
+                        <TableColumn fx:id="colLoanDate" text="Ngày mượn" prefWidth="150"/>
+                        <TableColumn fx:id="colDueDate" text="Ngày đến hạn" prefWidth="150"/>
+                        <TableColumn fx:id="colReaderId" text="ID độc giả" prefWidth="100"/>
+                    </columns>
+                </TableView>
+            </VBox>
+        </Tab>
+
+        <Tab text="Chi tiết mượn">
+            <VBox spacing="5">
+                <HBox spacing="5">
+                    <Button text="Thêm" onAction="#handleAddLoanDetail"/>
+                    <Button text="Sửa" onAction="#handleEditLoanDetail"/>
+                    <Button text="Xóa" onAction="#handleDeleteLoanDetail"/>
+                </HBox>
+                <TableView fx:id="loanDetailTable" prefHeight="300">
+                    <columns>
+                        <TableColumn fx:id="colLoanDetailId" text="ID" prefWidth="50"/>
+                        <TableColumn fx:id="colReturnDate" text="Ngày trả" prefWidth="150"/>
+                        <TableColumn fx:id="colLoanIdDetail" text="ID Phiếu mượn" prefWidth="100"/>
+                        <TableColumn fx:id="colCopyId" text="ID bản sao" prefWidth="100"/>
+                    </columns>
+                </TableView>
+            </VBox>
+        </Tab>
+
+        <Tab text="Đặt trước sách">
+            <VBox spacing="5">
+                <HBox spacing="5">
+                    <Button text="Thêm" onAction="#handleAddReservation"/>
+                    <Button text="Sửa" onAction="#handleEditReservation"/>
+                    <Button text="Xóa" onAction="#handleDeleteReservation"/>
+                </HBox>
+                <TableView fx:id="reservationTable" prefHeight="300">
+                    <columns>
+                        <TableColumn fx:id="colReservationId" text="ID" prefWidth="50"/>
+                        <TableColumn fx:id="colReservationDate" text="Ngày đặt" prefWidth="150"/>
+                        <TableColumn fx:id="colStatus" text="Trạng thái" prefWidth="100"/>
+                        <TableColumn fx:id="colReaderIdRes" text="ID độc giả" prefWidth="100"/>
+                        <TableColumn fx:id="colTitleId" text="ID đầu sách" prefWidth="100"/>
+                    </columns>
+                </TableView>
+            </VBox>
+        </Tab>
+
+    </TabPane>
+
+</VBox>
