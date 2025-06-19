@@ -92,6 +92,46 @@ public class LoanRepository {
         return false;
     }
 
+    public boolean save(Loan loan) {
+        if (loan.getLoanId() == 0) {
+            // Thêm mới
+            String sql = "INSERT INTO loan (loan_date, due_date, reader_id) VALUES (?, ?, ?)";
+            try (Connection conn = DBConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                stmt.setDate(1, Date.valueOf(loan.getLoanDate()));
+                stmt.setDate(2, Date.valueOf(loan.getDueDate()));
+                stmt.setInt(3, loan.getReaderId());
+                int affected = stmt.executeUpdate();
+                if (affected > 0) {
+                    try (ResultSet keys = stmt.getGeneratedKeys()) {
+                        if (keys.next()) {
+                            loan.setLoanId(keys.getInt(1));
+                        }
+                    }
+                    return true;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return false;
+        } else {
+            // Cập nhật
+            String sql = "UPDATE loan SET loan_date = ?, due_date = ?, reader_id = ? WHERE loan_id = ?";
+            try (Connection conn = DBConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setDate(1, Date.valueOf(loan.getLoanDate()));
+                stmt.setDate(2, Date.valueOf(loan.getDueDate()));
+                stmt.setInt(3, loan.getReaderId());
+                stmt.setInt(4, loan.getLoanId());
+                int affected = stmt.executeUpdate();
+                return affected > 0;
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return false;
+        }
+    }
+
     private Loan mapResultSetToLoan(ResultSet rs) throws SQLException {
         Loan loan = new Loan();
         loan.setLoanId(rs.getInt("loan_id"));

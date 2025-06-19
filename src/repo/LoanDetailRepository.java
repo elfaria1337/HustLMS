@@ -100,6 +100,14 @@ public class LoanDetailRepository {
         return false;
     }
 
+    public void save(LoanDetail loanDetail) {
+        if (loanDetail.getLoanDetailId() == 0) {
+            insert(loanDetail);
+        } else {
+            update(loanDetail);
+        }
+    }
+
     private LoanDetail mapResultSetToLoanDetail(ResultSet rs) throws SQLException {
         LoanDetail detail = new LoanDetail();
         detail.setLoanDetailId(rs.getInt("loan_detail_id"));

@@ -4,7 +4,12 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import model.Loan;
 import model.LoanDetail;
 import model.Reservation;
@@ -12,6 +17,7 @@ import repo.LoanDetailRepository;
 import repo.LoanRepository;
 import repo.ReservationRepository;
 
+import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -96,7 +102,21 @@ public class LoanManagementController {
 
     // ===== Loan handlers =====
     public void handleAddLoan() {
-        showInfo("Chức năng thêm phiếu mượn chưa triển khai.");
+        try {
+            // Tạo một đối tượng Loan mới
+            Loan newLoan = new Loan();
+
+            // Mở dialog thêm/sửa phiếu mượn
+            boolean saveClicked = showLoanEditDialog(newLoan);
+            if (saveClicked) {
+                // Lưu Loan vào DB
+                loanRepo.save(newLoan);
+                // Cập nhật lại danh sách
+                loadLoans();
+            }
+        } catch (Exception e) {
+            showError("Lỗi khi thêm phiếu mượn", e.getMessage());
+        }
     }
 
     public void handleEditLoan() {
@@ -105,7 +125,18 @@ public class LoanManagementController {
             showWarning("Vui lòng chọn phiếu mượn để sửa.");
             return;
         }
-        showInfo("Chức năng sửa phiếu mượn chưa triển khai.");
+        try {
+            // Mở dialog sửa phiếu mượn với dữ liệu đã chọn
+            boolean saveClicked = showLoanEditDialog(selected);
+            if (saveClicked) {
+                // Cập nhật dữ liệu vào DB
+                loanRepo.save(selected);
+                // Cập nhật lại danh sách
+                loadLoans();
+            }
+        } catch (Exception e) {
+            showError("Lỗi khi sửa phiếu mượn", e.getMessage());
+        }
     }
 
     public void handleDeleteLoan() {
@@ -124,9 +155,28 @@ public class LoanManagementController {
         }
     }
 
+    private void loadLoans() {
+        loanList.setAll(loanRepo.findAll());
+        loanTable.setItems(loanList);
+    }
+
     // ===== LoanDetail handlers =====
     public void handleAddLoanDetail() {
-        showInfo("Chức năng thêm chi tiết mượn chưa triển khai.");
+        try {
+            // Tạo một đối tượng LoanDetail mới
+            LoanDetail newDetail = new LoanDetail();
+
+            // Mở dialog thêm/sửa chi tiết mượn
+            boolean saveClicked = showLoanDetailEditDialog(newDetail);
+            if (saveClicked) {
+                // Lưu LoanDetail vào DB
+                loanDetailRepo.save(newDetail);
+                // Cập nhật lại danh sách chi tiết mượn
+                loadData();
+            }
+        } catch (Exception e) {
+            showError("Lỗi khi thêm chi tiết mượn", e.getMessage());
+        }
     }
 
     public void handleEditLoanDetail() {
@@ -135,7 +185,18 @@ public class LoanManagementController {
             showWarning("Vui lòng chọn chi tiết mượn để sửa.");
             return;
         }
-        showInfo("Chức năng sửa chi tiết mượn chưa triển khai.");
+        try {
+            // Mở dialog sửa chi tiết mượn với dữ liệu đã chọn
+            boolean saveClicked = showLoanDetailEditDialog(selected);
+            if (saveClicked) {
+                // Cập nhật dữ liệu vào DB
+                loanDetailRepo.save(selected);
+                // Cập nhật lại danh sách chi tiết mượn
+                loadData();
+            }
+        } catch (Exception e) {
+            showError("Lỗi khi sửa chi tiết mượn", e.getMessage());
+        }
     }
 
     public void handleDeleteLoanDetail() {
@@ -152,6 +213,28 @@ public class LoanManagementController {
                 showWarning("Xóa chi tiết mượn thất bại.");
             }
         }
+    }
+
+    // Hàm mở dialog thêm/sửa chi tiết mượn, trả về true nếu lưu thành công
+    private boolean showLoanDetailEditDialog(LoanDetail loanDetail) throws IOException {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/res/view/loan_detail_form.fxml"));
+        Parent page = loader.load();
+
+        Stage dialogStage = new Stage();
+        dialogStage.setTitle("Thông tin chi tiết mượn");
+        dialogStage.initModality(Modality.WINDOW_MODAL);
+        dialogStage.initOwner(loanTable.getScene().getWindow());  // Hoặc một stage cha phù hợp
+        Scene scene = new Scene(page);
+        dialogStage.setScene(scene);
+        dialogStage.setWidth(330);
+
+        LoanDetailFormController controller = loader.getController();
+        controller.setDialogStage(dialogStage);
+        controller.setLoanDetail(loanDetail);
+
+        dialogStage.showAndWait();
+
+        return controller.isSaveClicked();
     }
 
     // ===== Reservation handlers =====
@@ -185,9 +268,34 @@ public class LoanManagementController {
     }
 
     // ===== Helper methods =====
+    // Hàm mở dialog thêm/sửa, trả về true nếu lưu thành công
+    private boolean showLoanEditDialog(Loan loan) throws IOException {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/res/view/loan_form.fxml"));
+        Parent page = loader.load();
+
+        Stage dialogStage = new Stage();
+        dialogStage.setTitle("Thông tin phiếu mượn");
+        dialogStage.initModality(Modality.WINDOW_MODAL);
+        dialogStage.initOwner(loanTable.getScene().getWindow()); // hoặc stage hiện tại
+        Scene scene = new Scene(page);
+        dialogStage.setScene(scene);
+        dialogStage.setWidth(320);
+        dialogStage.setHeight(250);
+
+        LoanFormController controller = loader.getController();
+        controller.setDialogStage(dialogStage);
+        controller.setLoan(loan);
+
+        dialogStage.showAndWait();
+
+        return controller.isSaveClicked();
+    }
+
+    // Các hàm showInfo, showWarning, showError là hàm hiển thị cảnh báo/hỏi thông báo dạng Alert
     private void showInfo(String msg) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Thông báo");
+        alert.setHeaderText(null);
         alert.setContentText(msg);
         alert.showAndWait();
     }
@@ -195,6 +303,15 @@ public class LoanManagementController {
     private void showWarning(String msg) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle("Cảnh báo");
+        alert.setHeaderText(null);
+        alert.setContentText(msg);
+        alert.showAndWait();
+    }
+
+    private void showError(String title, String msg) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
         alert.setContentText(msg);
         alert.showAndWait();
     }
