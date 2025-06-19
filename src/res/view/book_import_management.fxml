@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="10" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.BookImportManagementController">
+<VBox prefHeight="381.0" prefWidth="735.0" spacing="10" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.BookImportManagementController">
 
     <padding>
         <Insets bottom="10" left="10" right="10" top="10" />
@@ -29,11 +29,11 @@
                 <TableView fx:id="supplierTable" prefHeight="300">
                     <columns>
                         <TableColumn fx:id="colSupplierId" prefWidth="50" text="ID" />
-                        <TableColumn fx:id="colCompanyName" prefWidth="200" text="Tên công ty" />
-                        <TableColumn fx:id="colPhone" prefWidth="120" text="Điện thoại" />
-                        <TableColumn fx:id="colEmail" prefWidth="200" text="Email" />
-                        <TableColumn fx:id="colAddress" prefWidth="250" text="Địa chỉ" />
-                        <TableColumn fx:id="colContactPerson" prefWidth="150" text="Người liên hệ" />
+                        <TableColumn fx:id="colCompanyName" prefWidth="128.80002212524414" text="Tên công ty" />
+                        <TableColumn fx:id="colPhone" prefWidth="126.39997863769531" text="Điện thoại" />
+                        <TableColumn fx:id="colEmail" prefWidth="136.79998779296875" text="Email" />
+                        <TableColumn fx:id="colAddress" prefWidth="94.39993286132812" text="Địa chỉ" />
+                        <TableColumn fx:id="colContactPerson" prefWidth="176.00003662109373" text="Người liên hệ" />
                     </columns>
                 </TableView>
             </VBox>
