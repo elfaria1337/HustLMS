@@ -3,15 +3,24 @@ package controller;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import model.BookImport;
 import model.BookImportDetail;
+import model.BookTitle;
 import model.Supplier;
 import repo.BookImportDetailRepository;
 import repo.BookImportRepository;
+import repo.BookTitleRepository;
 import repo.SupplierRepository;
 
+import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +35,9 @@ public class BookImportManagementController {
     @FXML private TableColumn<Supplier, String> colEmail;
     @FXML private TableColumn<Supplier, String> colAddress;
     @FXML private TableColumn<Supplier, String> colContactPerson;
+    @FXML
+    private TextField searchSupplierField;
+    private FilteredList<Supplier> filteredSuppliers;
 
     // BookImport
     @FXML private TableView<BookImport> bookImportTable;
@@ -46,6 +58,7 @@ public class BookImportManagementController {
     private SupplierRepository supplierRepo = new SupplierRepository();
     private BookImportRepository bookImportRepo = new BookImportRepository();
     private BookImportDetailRepository bookImportDetailRepo = new BookImportDetailRepository();
+    private BookTitleRepository bookTitleRepo = new BookTitleRepository();
 
     private ObservableList<Supplier> supplierList = FXCollections.observableArrayList();
     private ObservableList<BookImport> bookImportList = FXCollections.observableArrayList();
@@ -78,8 +91,10 @@ public class BookImportManagementController {
         colQuantity.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getQuantity()));
         colPricePerUnit.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getPricePerUnit().toString()));
         colTitleName.setCellValueFactory(cellData -> {
-            // TODO: lấy tên sách theo titleId (cần tạo repo BookTitleRepository)
-            return new ReadOnlyObjectWrapper<>("Chưa có");
+            int titleId = cellData.getValue().getTitleId();
+            BookTitle bookTitle = bookTitleRepo.findById(titleId);
+            String titleName = bookTitle != null ? bookTitle.getTitleName() : "Chưa có";
+            return new ReadOnlyObjectWrapper<>(titleName);
         });
         colImportRef.setCellValueFactory(cellData -> {
             int importId = cellData.getValue().getImportId();
@@ -88,12 +103,36 @@ public class BookImportManagementController {
         });
 
         loadData();
+
+        // Load data từ repo (giả sử supplierRepo đã có)
+        supplierList.setAll(supplierRepo.findAll());
+
+        // Tạo FilteredList
+        filteredSuppliers = new FilteredList<>(supplierList, p -> true);
+
+        // Set FilteredList làm data cho TableView
+        supplierTable.setItems(filteredSuppliers);
+
+        // Thêm listener vào ô tìm kiếm
+        searchSupplierField.textProperty().addListener((observable, oldValue, newValue) -> {
+            filteredSuppliers.setPredicate(supplier -> {
+                if (newValue == null || newValue.isEmpty()) {
+                    return true;
+                }
+                String lowerCaseFilter = newValue.toLowerCase();
+
+                if (supplier.getCompanyName() != null && supplier.getCompanyName().toLowerCase().contains(lowerCaseFilter)) {
+                    return true;
+                }
+                if (supplier.getContactPerson() != null && supplier.getContactPerson().toLowerCase().contains(lowerCaseFilter)) {
+                    return true;
+                }
+                return false;
+            });
+        });
     }
 
     private void loadData() {
-        List<Supplier> suppliers = supplierRepo.findAll();
-        supplierList.setAll(suppliers);
-        supplierTable.setItems(supplierList);
 
         List<BookImport> imports = bookImportRepo.findAll();
         bookImportList.setAll(imports);
@@ -105,17 +144,75 @@ public class BookImportManagementController {
     }
 
     // ========== Supplier handlers ==========
-    public void handleAddSupplier() {
-        showInfo("Chức năng thêm nhà cung cấp chưa triển khai.");
+    @FXML
+    private void handleAddSupplier() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/res/view/supplier_form.fxml"));
+            Parent page = loader.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Thêm nhà cung cấp mới");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(supplierTable.getScene().getWindow());
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+
+            SupplierFormController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            controller.setSupplier(null); // Tạo mới supplier
+
+            dialogStage.showAndWait();
+
+            if (controller.isSaveClicked()) {
+                Supplier newSupplier = controller.getSupplier();
+                if (supplierRepo.insert(newSupplier)) { // supplierRepo là repository của Supplier
+                    loadSuppliers(); // Hàm làm mới TableView
+                } else {
+                    showAlert("Lỗi", "Không thể lưu nhà cung cấp mới.");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Lỗi", "Không thể mở form thêm nhà cung cấp.");
+        }
     }
 
-    public void handleEditSupplier() {
+    @FXML
+    private void handleEditSupplier() {
         Supplier selected = supplierTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
             showWarning("Vui lòng chọn nhà cung cấp để sửa.");
             return;
         }
-        showInfo("Chức năng sửa nhà cung cấp chưa triển khai.");
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/res/view/supplier_form.fxml"));
+            Parent page = loader.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Sửa thông tin nhà cung cấp");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(supplierTable.getScene().getWindow());
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+
+            SupplierFormController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            controller.setSupplier(selected); // Truyền đối tượng được chọn vào form
+
+            dialogStage.showAndWait();
+
+            if (controller.isSaveClicked()) {
+                Supplier updatedSupplier = controller.getSupplier();
+                if (supplierRepo.update(updatedSupplier)) {
+                    loadSuppliers(); // Làm mới danh sách
+                } else {
+                    showAlert("Lỗi", "Không thể cập nhật nhà cung cấp.");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Lỗi", "Không thể mở form sửa nhà cung cấp.");
+        }
     }
 
     public void handleDeleteSupplier() {
@@ -135,18 +232,88 @@ public class BookImportManagementController {
         }
     }
 
-    // ========== BookImport handlers ==========
-    public void handleAddBookImport() {
-        showInfo("Chức năng thêm phiếu nhập chưa triển khai.");
+    // Hàm load lại danh sách suppliers và đổ vào TableView
+    private void loadSuppliers() {
+        List<Supplier> list = supplierRepo.findAll();
+        supplierList.setAll(list);
+        supplierTable.setItems(supplierList);
     }
 
+    // ========== BookImport handlers ==========
+    @FXML
+    public void handleAddBookImport() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/res/view/book_import_form.fxml"));
+            Parent page = loader.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Thêm Phiếu nhập sách");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(bookImportTable.getScene().getWindow());
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+            dialogStage.setWidth(400);
+            dialogStage.setHeight(240);
+
+            BookImportFormController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            controller.setBookImport(null); // Tạo mới phiếu nhập
+
+            dialogStage.showAndWait();
+
+            if (controller.isSaveClicked()) {
+                BookImport newImport = controller.getBookImport();
+                if (bookImportRepo.insert(newImport)) { // gọi repo insert để lưu
+                    loadBookImports(); // tải lại dữ liệu bảng
+                } else {
+                    showAlert("Lỗi", "Lưu phiếu nhập thất bại.");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Lỗi", "Không thể mở form thêm phiếu nhập.");
+        }
+    }
+
+    @FXML
     public void handleEditBookImport() {
         BookImport selected = bookImportTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
             showWarning("Vui lòng chọn phiếu nhập để sửa.");
             return;
         }
-        showInfo("Chức năng sửa phiếu nhập chưa triển khai.");
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/res/view/book_import_form.fxml"));
+            Parent page = loader.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Sửa Phiếu nhập sách");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(bookImportTable.getScene().getWindow());
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+            dialogStage.setWidth(400);
+            dialogStage.setHeight(240);
+
+            BookImportFormController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            controller.setBookImport(selected); // truyền phiếu nhập được chọn vào form
+
+            dialogStage.showAndWait();
+
+            if (controller.isSaveClicked()) {
+                BookImport updatedImport = controller.getBookImport();
+                if (bookImportRepo.update(updatedImport)) { // gọi repo update để lưu
+                    loadBookImports(); // tải lại dữ liệu bảng
+                } else {
+                    showAlert("Lỗi", "Cập nhật phiếu nhập thất bại.");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Lỗi", "Không thể mở form sửa phiếu nhập.");
+        }
     }
 
     public void handleDeleteBookImport() {
@@ -166,18 +333,84 @@ public class BookImportManagementController {
         }
     }
 
-    // ========== BookImportDetail handlers ==========
-    public void handleAddBookImportDetail() {
-        showInfo("Chức năng thêm chi tiết nhập chưa triển khai.");
+    private void loadBookImports() {
+        List<BookImport> imports = bookImportRepo.findAll(); // Lấy dữ liệu từ repo
+        bookImportList.setAll(imports);
+        bookImportTable.setItems(bookImportList);
     }
 
+    // ========== BookImportDetail handlers ==========
+@FXML
+public void handleAddBookImportDetail() {
+    try {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/res/view/book_import_detail_form.fxml"));
+        Parent page = loader.load();
+
+        Stage dialogStage = new Stage();
+        dialogStage.setTitle("Thêm chi tiết nhập sách");
+        dialogStage.initModality(Modality.WINDOW_MODAL);
+        dialogStage.initOwner(bookImportDetailTable.getScene().getWindow());
+        Scene scene = new Scene(page);
+        dialogStage.setScene(scene);
+        dialogStage.setWidth(400);
+
+        BookImportDetailFormController controller = loader.getController();
+        controller.setDialogStage(dialogStage);
+        controller.setBookImportDetail(null); // Tạo mới
+
+        dialogStage.showAndWait();
+
+        if (controller.isSaveClicked()) {
+            BookImportDetail newDetail = controller.getBookImportDetail();
+            if (bookImportDetailRepo.insert(newDetail)) {
+                loadBookImportDetails(); // Reload bảng
+            } else {
+                showAlert("Lỗi", "Lưu chi tiết nhập sách thất bại.");
+            }
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
+        showAlert("Lỗi", "Không thể mở cửa sổ thêm chi tiết nhập sách.");
+    }
+}
+
+    @FXML
     public void handleEditBookImportDetail() {
         BookImportDetail selected = bookImportDetailTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
             showWarning("Vui lòng chọn chi tiết nhập để sửa.");
             return;
         }
-        showInfo("Chức năng sửa chi tiết nhập chưa triển khai.");
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/res/view/book_import_detail_form.fxml"));
+            Parent page = loader.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Sửa chi tiết nhập sách");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(bookImportDetailTable.getScene().getWindow());
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+            dialogStage.setWidth(400);
+
+            BookImportDetailFormController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            controller.setBookImportDetail(selected); // Truyền đối tượng đã chọn
+
+            dialogStage.showAndWait();
+
+            if (controller.isSaveClicked()) {
+                BookImportDetail updatedDetail = controller.getBookImportDetail();
+                if (bookImportDetailRepo.update(updatedDetail)) {
+                    loadBookImportDetails(); // Reload bảng
+                } else {
+                    showAlert("Lỗi", "Cập nhật chi tiết nhập sách thất bại.");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Lỗi", "Không thể mở cửa sổ sửa chi tiết nhập sách.");
+        }
     }
 
     public void handleDeleteBookImportDetail() {
@@ -197,6 +430,12 @@ public class BookImportManagementController {
         }
     }
 
+    private void loadBookImportDetails() {
+        List<BookImportDetail> details = bookImportDetailRepo.findAll();
+        bookImportDetailList.setAll(details);
+        bookImportDetailTable.setItems(bookImportDetailList);
+    }
+
     // === Helper methods ===
 
     private void showInfo(String msg) {
@@ -210,6 +449,15 @@ public class BookImportManagementController {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle("Cảnh báo");
         alert.setContentText(msg);
+        alert.showAndWait();
+    }
+
+    // Hàm hiển thị thông báo lỗi hoặc thông tin dạng Alert
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
         alert.showAndWait();
     }
 
