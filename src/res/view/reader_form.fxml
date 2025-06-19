@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.ReaderFormController" spacing="10">
+    <padding>
+        <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
+
+    <Label text="Thông tin độc giả" style="-fx-font-weight: bold; -fx-font-size: 16px;"/>
+
+    <GridPane hgap="10" vgap="10">
+
+        <!-- Thông tin độc giả -->
+        <Label text="Họ tên:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="fullNameField" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+
+        <Label text="Ngày sinh:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <DatePicker fx:id="birthDatePicker" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+
+        <Label text="Địa chỉ:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <TextField fx:id="addressField" GridPane.rowIndex="2" GridPane.columnIndex="1" />
+
+        <Label text="Số điện thoại:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <TextField fx:id="phoneField" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+
+        <Label text="Email:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <TextField fx:id="emailField" GridPane.rowIndex="4" GridPane.columnIndex="1" />
+
+        <!-- Thông tin tài khoản -->
+        <Label text="Username:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+        <TextField fx:id="usernameField" GridPane.rowIndex="5" GridPane.columnIndex="1" />
+
+        <Label text="Password:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+        <PasswordField fx:id="passwordField" GridPane.rowIndex="6" GridPane.columnIndex="1" />
+
+        <Label text="Role:" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="roleComboBox" GridPane.rowIndex="7" GridPane.columnIndex="1"/>
+
+    </GridPane>
+
+    <HBox spacing="10" alignment="center_right">
+        <Button text="Lưu" onAction="#handleSave"/>
+        <Button text="Hủy" onAction="#handleCancel"/>
+    </HBox>
+
+</VBox>
