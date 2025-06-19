@@ -1,14 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="controller.BookManagementController" spacing="10" >
+<VBox spacing="10" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.BookManagementController">
     
     <padding>
-        <Insets top="10" right="10" bottom="10" left="10"/>
+        <Insets bottom="10" left="10" right="10" top="10" />
     </padding>
 
     <TabPane>
@@ -16,18 +21,19 @@
         <Tab text="Đầu sách">
             <VBox spacing="5">
                 <HBox spacing="5">
-                    <Button text="Thêm đầu sách" onAction="#handleAddBookTitle"/>
-                    <Button text="Sửa đầu sách" onAction="#handleEditBookTitle"/>
-                    <Button text="Xóa đầu sách" onAction="#handleDeleteBookTitle"/>
+                    <TextField fx:id="searchField" prefHeight="26.0" prefWidth="214.0" promptText="Tìm kiếm theo tên sách hoặc tác giả..." />
+                    <Button onAction="#handleAddBookTitle" text="Thêm đầu sách" />
+                    <Button onAction="#handleEditBookTitle" text="Sửa đầu sách" />
+                    <Button onAction="#handleDeleteBookTitle" text="Xóa đầu sách" />
                 </HBox>
                 <TableView fx:id="bookTitleTable" prefHeight="300">
                     <columns>
-                        <TableColumn fx:id="colTitleId" text="ID" prefWidth="50"/>
-                        <TableColumn fx:id="colTitleName" text="Tên sách" prefWidth="200"/>
-                        <TableColumn fx:id="colAuthor" text="Tác giả" prefWidth="150"/>
-                        <TableColumn fx:id="colGenre" text="Thể loại" prefWidth="100"/>
-                        <TableColumn fx:id="colPublisher" text="NXB" prefWidth="150"/>
-                        <TableColumn fx:id="colPublishYear" text="Năm xuất bản" prefWidth="100"/>
+                        <TableColumn fx:id="colTitleId" prefWidth="50" text="ID" />
+                        <TableColumn fx:id="colTitleName" prefWidth="200" text="Tên sách" />
+                        <TableColumn fx:id="colAuthor" prefWidth="139.99993896484375" text="Tác giả" />
+                        <TableColumn fx:id="colGenre" prefWidth="161.60000610351562" text="Thể loại" />
+                        <TableColumn fx:id="colPublisher" prefWidth="112.00009155273438" text="NXB" />
+                        <TableColumn fx:id="colPublishYear" prefWidth="88.0" text="Năm xuất bản" />
                     </columns>
                 </TableView>
             </VBox>
@@ -37,14 +43,14 @@
         <Tab text="Kho sách">
             <VBox spacing="5">
                 <HBox spacing="5">
-                    <Button text="Thêm kho" onAction="#handleAddInventory"/>
-                    <Button text="Sửa kho" onAction="#handleEditInventory"/>
-                    <Button text="Xóa kho" onAction="#handleDeleteInventory"/>
+                    <Button onAction="#handleAddInventory" text="Thêm kho" />
+                    <Button onAction="#handleEditInventory" text="Sửa kho" />
+                    <Button onAction="#handleDeleteInventory" text="Xóa kho" />
                 </HBox>
                 <TableView fx:id="inventoryTable" prefHeight="200">
                     <columns>
-                        <TableColumn fx:id="colInventoryId" text="ID" prefWidth="100"/>
-                        <TableColumn fx:id="colLocationName" text="Tên vị trí" prefWidth="300"/>
+                        <TableColumn fx:id="colInventoryId" prefWidth="156.80002439022064" text="ID" />
+                        <TableColumn fx:id="colLocationName" prefWidth="596.7999877929688" text="Tên vị trí" />
                     </columns>
                 </TableView>
             </VBox>
@@ -54,16 +60,16 @@
         <Tab text="Bản sao sách">
             <VBox spacing="5">
                 <HBox spacing="5">
-                    <Button text="Thêm bản sao" onAction="#handleAddBookCopy"/>
-                    <Button text="Sửa bản sao" onAction="#handleEditBookCopy"/>
-                    <Button text="Xóa bản sao" onAction="#handleDeleteBookCopy"/>
+                    <Button onAction="#handleAddBookCopy" text="Thêm bản sao" />
+                    <Button onAction="#handleEditBookCopy" text="Sửa bản sao" />
+                    <Button onAction="#handleDeleteBookCopy" text="Xóa bản sao" />
                 </HBox>
                 <TableView fx:id="bookCopyTable" prefHeight="300">
                     <columns>
-                        <TableColumn fx:id="colCopyId" text="ID" prefWidth="50"/>
-                        <TableColumn fx:id="colCopyState" text="Trạng thái" prefWidth="150"/>
-                        <TableColumn fx:id="colCopyInventory" text="Kho sách" prefWidth="150"/>
-                        <TableColumn fx:id="colCopyTitle" text="Đầu sách" prefWidth="250"/>
+                        <TableColumn fx:id="colCopyId" prefWidth="67.99999845027924" text="ID" />
+                        <TableColumn fx:id="colCopyState" prefWidth="250.39997100830078" text="Trạng thái" />
+                        <TableColumn fx:id="colCopyInventory" prefWidth="254.39999389648438" text="Kho sách" />
+                        <TableColumn fx:id="colCopyTitle" prefWidth="181.5999755859375" text="Đầu sách" />
                     </columns>
                 </TableView>
             </VBox>

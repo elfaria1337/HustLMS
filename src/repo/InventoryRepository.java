@@ -46,6 +46,27 @@ public class InventoryRepository {
         return null;
     }
 
+    public List<Inventory> searchByLocationName(String keyword) {
+        List<Inventory> list = new ArrayList<>();
+        String sql = "SELECT * FROM inventory WHERE LOWER(location_name) LIKE ? ORDER BY location_name LIMIT 10";
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, keyword.toLowerCase());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Inventory inv = new Inventory();
+                    inv.setInventoryId(rs.getInt("inventory_id"));
+                    inv.setLocationName(rs.getString("location_name"));
+                    list.add(inv);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+
     public boolean insert(Inventory inv) {
         String sql = "INSERT INTO inventory(location_name) VALUES (?)";
         try (Connection conn = DBConnection.getConnection();

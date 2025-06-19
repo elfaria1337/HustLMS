@@ -41,6 +41,52 @@ public class BookTitleRepository {
         return null;
     }
 
+    public List<BookTitle> searchByTitleOrAuthor(String keyword) {
+        List<BookTitle> result = new ArrayList<>();
+        String sql = "SELECT * FROM book_title WHERE title_name ILIKE ? OR author ILIKE ? ORDER BY title_id";
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            String likePattern = "%" + keyword + "%";
+            stmt.setString(1, likePattern);
+            stmt.setString(2, likePattern);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    BookTitle book = mapResultSetToBookTitle(rs);
+                    result.add(book);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public List<BookTitle> searchByTitleName(String keyword) {
+        List<BookTitle> list = new ArrayList<>();
+        String sql = "SELECT * FROM book_title WHERE LOWER(title_name) LIKE ? ORDER BY title_name LIMIT 10";
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, keyword.toLowerCase());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    BookTitle bookTitle = new BookTitle();
+                    bookTitle.setTitleId(rs.getInt("title_id"));
+                    bookTitle.setTitleName(rs.getString("title_name"));
+                    bookTitle.setAuthor(rs.getString("author"));
+                    bookTitle.setGenre(rs.getString("genre"));
+                    bookTitle.setPublisher(rs.getString("publisher"));
+                    bookTitle.setPublishYear(rs.getInt("publish_year"));
+                    list.add(bookTitle);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public boolean insert(BookTitle book) {
         String sql = "INSERT INTO book_title(title_name, author, genre, publisher, publish_year) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
