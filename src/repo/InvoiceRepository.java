@@ -41,6 +41,23 @@ public class InvoiceRepository {
         return null;
     }
 
+    public List<Invoice> findByReaderId(int readerId) {
+        List<Invoice> list = new ArrayList<>();
+        String sql = "SELECT * FROM invoice WHERE reader_id = ? ORDER BY payment_date DESC";
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, readerId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToInvoice(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public boolean insert(Invoice invoice) {
         String sql = "INSERT INTO invoice(amount, payment_method, payment_date, reader_id, fine_id) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();

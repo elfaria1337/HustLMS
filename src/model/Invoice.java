@@ -35,6 +35,10 @@ public class Invoice {
     public LocalDate getPaymentDate() { return paymentDate; }
     public void setPaymentDate(LocalDate paymentDate) { this.paymentDate = paymentDate; }
 
+    public LocalDate getInvoiceDate() {
+        return getPaymentDate();
+    }
+
     public int getReaderId() { return readerId; }
     public void setReaderId(int readerId) { this.readerId = readerId; }
 

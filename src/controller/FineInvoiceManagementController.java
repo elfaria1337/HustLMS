@@ -4,12 +4,18 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import model.Fine;
 import model.Invoice;
 import repo.FineRepository;
 import repo.InvoiceRepository;
 
+import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -43,18 +49,24 @@ public class FineInvoiceManagementController {
 
     @FXML
     public void initialize() {
-        // Fine columns
+        // Thiết lập cột bảng Fine
         colFineId.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getFineId()));
         colReason.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getReason()));
         colAmount.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getAmount().toString()));
         colIssueDate.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getIssueDate().format(dateFormatter)));
         colReaderIdFine.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getReaderId()));
 
-        // Invoice columns
+        // Thiết lập cột bảng Invoice
         colInvoiceId.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getInvoiceId()));
         colAmountInvoice.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getAmount().toString()));
         colPaymentMethod.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getPaymentMethod()));
-        colPaymentDate.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getPaymentDate().format(dateFormatter)));
+        colPaymentDate.setCellValueFactory(cellData -> {
+            if (cellData.getValue().getPaymentDate() != null) {
+                return new ReadOnlyObjectWrapper<>(cellData.getValue().getPaymentDate().format(dateFormatter));
+            } else {
+                return new ReadOnlyObjectWrapper<>("");
+            }
+        });
         colReaderIdInvoice.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getReaderId()));
         colFineIdInvoice.setCellValueFactory(cellData -> {
             Integer fineId = cellData.getValue().getFineId();
@@ -76,7 +88,38 @@ public class FineInvoiceManagementController {
 
     // ===== Fine handlers =====
     public void handleAddFine() {
-        showInfo("Chức năng thêm phạt chưa triển khai.");
+        try {
+            Fine newFine = new Fine();
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/res/view/fine_form.fxml"));
+            Parent page = loader.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Thêm mới phạt");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(fineTable.getScene().getWindow());
+            dialogStage.setScene(new Scene(page));
+            dialogStage.setWidth(300);
+
+            FineFormController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            controller.setFine(newFine);
+
+            dialogStage.showAndWait();
+
+            if (controller.isSaveClicked()) {
+                Fine savedFine = controller.getFine();
+                if (fineRepo.insert(savedFine)) {
+                    showInfo("Thêm phạt thành công.");
+                    loadFines();
+                } else {
+                    showWarning("Thêm phạt thất bại.");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            showError("Lỗi", "Không thể mở form thêm phạt.");
+        }
     }
 
     public void handleEditFine() {
@@ -85,7 +128,36 @@ public class FineInvoiceManagementController {
             showWarning("Vui lòng chọn phạt để sửa.");
             return;
         }
-        showInfo("Chức năng sửa phạt chưa triển khai.");
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/res/view/fine_form.fxml"));
+            Parent page = loader.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Sửa phạt");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(fineTable.getScene().getWindow());
+            dialogStage.setScene(new Scene(page));
+            dialogStage.setWidth(300);
+
+            FineFormController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            controller.setFine(selected);
+
+            dialogStage.showAndWait();
+
+            if (controller.isSaveClicked()) {
+                Fine updatedFine = controller.getFine();
+                if (fineRepo.update(updatedFine)) {
+                    showInfo("Cập nhật phạt thành công.");
+                    loadFines();
+                } else {
+                    showWarning("Cập nhật phạt thất bại.");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            showError("Lỗi", "Không thể mở form sửa phạt.");
+        }
     }
 
     public void handleDeleteFine() {
@@ -104,9 +176,45 @@ public class FineInvoiceManagementController {
         }
     }
 
+    private void loadFines() {
+        List<Fine> fines = fineRepo.findAll();
+        fineList.setAll(fines);
+        fineTable.setItems(fineList);
+    }
+
     // ===== Invoice handlers =====
     public void handleAddInvoice() {
-        showInfo("Chức năng thêm hóa đơn chưa triển khai.");
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/res/view/invoice_form.fxml"));
+            Parent page = loader.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Thêm hóa đơn mới");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(invoiceTable.getScene().getWindow());
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+            dialogStage.setWidth(370);
+
+            InvoiceFormController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            controller.setInvoice(new Invoice());
+
+            dialogStage.showAndWait();
+
+            if (controller.isSaveClicked()) {
+                Invoice newInvoice = controller.getInvoice();
+                if (invoiceRepo.insert(newInvoice)) {
+                    loadInvoices();
+                    showInfo("Thêm hóa đơn thành công.");
+                } else {
+                    showWarning("Thêm hóa đơn thất bại.");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            showError("Lỗi hệ thống", "Không thể mở form thêm hóa đơn.");
+        }
     }
 
     public void handleEditInvoice() {
@@ -115,7 +223,37 @@ public class FineInvoiceManagementController {
             showWarning("Vui lòng chọn hóa đơn để sửa.");
             return;
         }
-        showInfo("Chức năng sửa hóa đơn chưa triển khai.");
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/res/view/invoice_form.fxml"));
+            Parent page = loader.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Sửa thông tin hóa đơn");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(invoiceTable.getScene().getWindow());
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+            dialogStage.setWidth(370);
+
+            InvoiceFormController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            controller.setInvoice(selected);
+
+            dialogStage.showAndWait();
+
+            if (controller.isSaveClicked()) {
+                Invoice updatedInvoice = controller.getInvoice();
+                if (invoiceRepo.update(updatedInvoice)) {
+                    loadInvoices();
+                    showInfo("Cập nhật hóa đơn thành công.");
+                } else {
+                    showWarning("Cập nhật hóa đơn thất bại.");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            showError("Lỗi hệ thống", "Không thể mở form sửa hóa đơn.");
+        }
     }
 
     public void handleDeleteInvoice() {
@@ -134,7 +272,37 @@ public class FineInvoiceManagementController {
         }
     }
 
+    private void loadInvoices() {
+        List<Invoice> invoices = invoiceRepo.findAll();
+        invoiceList.setAll(invoices);
+        invoiceTable.setItems(invoiceList);
+
+        colInvoiceId.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getInvoiceId()));
+        colAmountInvoice.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getAmount().toString()));
+        colPaymentMethod.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getPaymentMethod()));
+        colPaymentDate.setCellValueFactory(cellData -> {
+            if (cellData.getValue().getPaymentDate() != null) {
+                return new ReadOnlyObjectWrapper<>(cellData.getValue().getPaymentDate().format(dateFormatter));
+            } else {
+                return new ReadOnlyObjectWrapper<>("");
+            }
+        });
+        colReaderIdInvoice.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getReaderId()));
+        colFineIdInvoice.setCellValueFactory(cellData -> {
+            Integer fineId = cellData.getValue().getFineId();
+            return new ReadOnlyObjectWrapper<>(fineId != null ? fineId : 0);
+        });
+    }
+
     // ===== Helper methods =====
+    private void showError(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
     private void showInfo(String msg) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Thông báo");

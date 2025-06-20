@@ -26,7 +26,7 @@ public class DashboardController {
         btnBookManagement.setOnAction(e -> loadPage("/res/view/book_management.fxml"));
         btnBookImportManagement.setOnAction(e -> loadPage("/res/view/book_import_management.fxml"));
         btnLoanManagement.setOnAction(e -> loadPage("/res/view/loan_management.fxml"));
-        // btnFineInvoiceManagement.setOnAction(e -> loadPage("/res/view/fine_invoice_management.fxml"));
+        btnFineInvoiceManagement.setOnAction(e -> loadPage("/res/view/fine_invoice_management.fxml"));
     }
 
     private void loadPage(String fxmlPath) {

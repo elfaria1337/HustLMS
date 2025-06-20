@@ -41,6 +41,23 @@ public class FineRepository {
         return null;
     }
 
+    public List<Fine> findByReaderId(int readerId) {
+        List<Fine> list = new ArrayList<>();
+        String sql = "SELECT * FROM fine WHERE reader_id = ? ORDER BY issue_date DESC";
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, readerId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToFine(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public boolean insert(Fine fine) {
         String sql = "INSERT INTO fine(reason, amount, issue_date, reader_id) VALUES (?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();

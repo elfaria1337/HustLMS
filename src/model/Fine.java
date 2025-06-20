@@ -33,6 +33,10 @@ public class Fine {
     public LocalDate getIssueDate() { return issueDate; }
     public void setIssueDate(LocalDate issueDate) { this.issueDate = issueDate; }
 
+    public LocalDate getFineDate() {
+        return getIssueDate();
+    }
+
     public int getReaderId() { return readerId; }
     public void setReaderId(int readerId) { this.readerId = readerId; }
 }
