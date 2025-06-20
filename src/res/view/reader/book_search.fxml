@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.reader.BookSearchController" spacing="10">
+
+    <padding>
+        <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
+
+    <!-- Thanh tìm kiếm (không có nút Tìm) -->
+    <HBox spacing="10">
+        <TextField fx:id="searchField" promptText="Tìm kiếm theo tên, tác giả, thể loại, nhà xuất bản..." HBox.hgrow="ALWAYS"/>
+    </HBox>
+
+    <!-- Bảng kết quả tìm kiếm đầu sách -->
+    <TableView fx:id="bookTitleTable" prefHeight="400" prefWidth="800">
+        <columns>
+            <TableColumn fx:id="colTitleName" text="Tên sách" prefWidth="250"/>
+            <TableColumn fx:id="colAuthor" text="Tác giả" prefWidth="150"/>
+            <TableColumn fx:id="colGenre" text="Thể loại" prefWidth="120"/>
+            <TableColumn fx:id="colPublisher" text="Nhà xuất bản" prefWidth="150"/>
+            <TableColumn fx:id="colPublishYear" text="Năm xuất bản" prefWidth="80"/>
+        </columns>
+    </TableView>
+
+    <!-- Bảng chi tiết bản sao sách của đầu sách được chọn -->
+    <Label text="Thông tin bản sao sách (Inventory)" style="-fx-font-weight: bold;"/>
+    <TableView fx:id="bookCopyTable" prefHeight="200" prefWidth="800">
+        <columns>
+            <TableColumn fx:id="colCopyId" text="ID Bản sao" prefWidth="100"/>
+            <TableColumn fx:id="colLocationName" text="Vị trí" prefWidth="200"/>
+            <TableColumn fx:id="colState" text="Tình trạng" prefWidth="150"/>
+        </columns>
+    </TableView>
+
+</VBox>

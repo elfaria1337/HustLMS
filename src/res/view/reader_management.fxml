@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="10" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.ReaderController">
+
+    <padding>
+        <Insets bottom="10" left="10" right="10" top="10" />
+    </padding>
+
+    <!-- Thanh tìm kiếm và nút chức năng -->
+    <HBox spacing="5">
+        <TextField fx:id="searchField" prefHeight="26.0" prefWidth="250.0" promptText="Tìm kiếm theo tên hoặc số điện thoại..." />
+        <Button onAction="#handleAdd" text="Thêm mới" />
+        <Button onAction="#handleEdit" text="Sửa" />
+        <Button onAction="#handleToggleStatus" text="Khóa/Mở tài khoản" />
+    </HBox>
+
+    <!-- Bảng danh sách độc giả -->
+    <TableView fx:id="readerTable" prefHeight="400" prefWidth="700" >
+        <columns>
+            <TableColumn fx:id="colId" prefWidth="55" text="ID" />
+            <TableColumn fx:id="colFullName" prefWidth="150" text="Họ tên" />
+            <TableColumn fx:id="colBirthDate" prefWidth="100" text="Ngày sinh" />
+            <TableColumn fx:id="colAddress" prefWidth="200" text="Địa chỉ" />
+            <TableColumn fx:id="colPhone" prefWidth="120" text="SĐT" />
+            <TableColumn fx:id="colEmail" prefWidth="200" text="Email" />
+        </columns>
+    </TableView>
+
+    <!-- TabPane chứa các bảng lịch sử -->
+    <TabPane>
+        <Tab text="Lịch sử mượn">
+            <TableView fx:id="loanHistoryTable" prefHeight="150" prefWidth="700">
+                <columns>
+                    <TableColumn fx:id="colLoanId" text="Mã phiếu mượn" prefWidth="100" />
+                    <TableColumn fx:id="colLoanDate" text="Ngày mượn" prefWidth="150" />
+                    <TableColumn fx:id="colDueDate" text="Ngày trả hạn" prefWidth="150" />
+                </columns>
+            </TableView>
+        </Tab>
+        <Tab text="Lịch sử vi phạm">
+            <TableView fx:id="fineHistoryTable" prefHeight="150" prefWidth="700">
+                <columns>
+                    <TableColumn fx:id="colFineId" text="Mã vi phạm" prefWidth="100" />
+                    <TableColumn fx:id="colFineDate" text="Ngày vi phạm" prefWidth="150" />
+                    <TableColumn fx:id="colFineReason" text="Lý do" prefWidth="200" />
+                </columns>
+            </TableView>
+        </Tab>
+        <Tab text="Lịch sử thanh toán">
+            <TableView fx:id="invoiceHistoryTable" prefHeight="150" prefWidth="700">
+                <columns>
+                    <TableColumn fx:id="colInvoiceId" text="Mã thanh toán" prefWidth="100" />
+                    <TableColumn fx:id="colInvoiceDate" text="Ngày thanh toán" prefWidth="150" />
+                    <TableColumn fx:id="colInvoiceAmount" text="Số tiền" prefWidth="150" />
+                </columns>
+            </TableView>
+        </Tab>
+    </TabPane>
+
+</VBox>

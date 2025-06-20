@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.BookImportDetailFormController" spacing="10">
+
+    <padding>
+        <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
+
+    <Label text="Thông tin chi tiết nhập sách" style="-fx-font-weight: bold; -fx-font-size: 16px;"/>
+
+    <GridPane hgap="10" vgap="10">
+
+        <Label text="Phiếu nhập:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="bookImportTextField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <Label text="Phiếu nhập không tồn tại!" fx:id="bookImportErrorLabel" GridPane.rowIndex="1" GridPane.columnIndex="1" style="-fx-text-fill: red;" visible="false"/>
+
+        <Label text="Đầu sách:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <TextField fx:id="bookTitleTextField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+        <Label text="Đầu sách không tồn tại!" fx:id="bookTitleErrorLabel" GridPane.rowIndex="3" GridPane.columnIndex="1" style="-fx-text-fill: red;" visible="false"/>
+
+        <Label text="Số lượng:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <TextField fx:id="quantityField" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+        <Label text="Giá/unit:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+        <TextField fx:id="pricePerUnitField" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+    </GridPane>
+
+    <HBox spacing="10" alignment="center_right">
+        <Button text="Lưu" onAction="#handleSave"/>
+        <Button text="Hủy" onAction="#handleCancel"/>
+    </HBox>
+</VBox>
