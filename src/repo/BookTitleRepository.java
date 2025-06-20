@@ -41,43 +41,57 @@ public class BookTitleRepository {
         return null;
     }
 
-    public List<BookTitle> searchByTitleOrAuthor(String keyword) {
-        List<BookTitle> result = new ArrayList<>();
-        String sql = "SELECT * FROM book_title WHERE title_name ILIKE ? OR author ILIKE ? ORDER BY title_id";
+    public List<BookTitle> searchByKeyword(String keyword) {
+        List<BookTitle> list = new ArrayList<>();
+        String sql = "SELECT * FROM book_title WHERE LOWER(title_name) LIKE ? OR LOWER(author) LIKE ? OR LOWER(genre) LIKE ? OR LOWER(publisher) LIKE ? ORDER BY title_name LIMIT 50";
         try (Connection conn = DBConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            String likePattern = "%" + keyword + "%";
-            stmt.setString(1, likePattern);
-            stmt.setString(2, likePattern);
-            
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            String pattern = "%" + keyword.toLowerCase() + "%";
+            for (int i = 1; i <= 4; i++) {
+                stmt.setString(i, pattern);
+            }
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    BookTitle book = mapResultSetToBookTitle(rs);
-                    result.add(book);
+                    BookTitle bookTitle = mapResultSetToBookTitle(rs);
+                    list.add(bookTitle);
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return result;
+        return list;
     }
 
-    public List<BookTitle> searchByTitleName(String keyword) {
+    public List<BookTitle> searchByTitleName(String titleName) {
         List<BookTitle> list = new ArrayList<>();
-        String sql = "SELECT * FROM book_title WHERE LOWER(title_name) LIKE ? ORDER BY title_name LIMIT 10";
+        String sql = "SELECT * FROM book_title WHERE LOWER(title_name) LIKE ? ORDER BY title_name LIMIT 50";
         try (Connection conn = DBConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, keyword.toLowerCase());
+            String pattern = "%" + titleName.toLowerCase() + "%";
+            stmt.setString(1, pattern);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    BookTitle bookTitle = new BookTitle();
-                    bookTitle.setTitleId(rs.getInt("title_id"));
-                    bookTitle.setTitleName(rs.getString("title_name"));
-                    bookTitle.setAuthor(rs.getString("author"));
-                    bookTitle.setGenre(rs.getString("genre"));
-                    bookTitle.setPublisher(rs.getString("publisher"));
-                    bookTitle.setPublishYear(rs.getInt("publish_year"));
+                    BookTitle bookTitle = mapResultSetToBookTitle(rs);
+                    list.add(bookTitle);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public List<BookTitle> searchByTitleOrAuthor(String keyword) {
+        List<BookTitle> list = new ArrayList<>();
+        String sql = "SELECT * FROM book_title WHERE LOWER(title_name) LIKE ? OR LOWER(author) LIKE ? ORDER BY title_name LIMIT 50";
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            String pattern = "%" + keyword.toLowerCase() + "%";
+            stmt.setString(1, pattern);
+            stmt.setString(2, pattern);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    BookTitle bookTitle = mapResultSetToBookTitle(rs);
                     list.add(bookTitle);
                 }
             }

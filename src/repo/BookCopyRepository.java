@@ -41,6 +41,27 @@ public class BookCopyRepository {
         return null;
     }
 
+    public List<BookCopy> findByTitleId(int titleId) {
+        List<BookCopy> list = new ArrayList<>();
+        String sql = "SELECT bc.*, i.location_name " +
+                    "FROM book_copy bc " +
+                    "JOIN inventory i ON bc.inventory_id = i.inventory_id " +
+                    "WHERE bc.title_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, titleId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    BookCopy copy = mapResultSetToBookCopy(rs);
+                    list.add(copy);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public boolean insert(BookCopy copy) {
         String sql = "INSERT INTO book_copy(state, inventory_id, title_id) VALUES (?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
@@ -98,6 +119,7 @@ public class BookCopyRepository {
         copy.setState(rs.getString("state"));
         copy.setInventoryId(rs.getInt("inventory_id"));
         copy.setTitleId(rs.getInt("title_id"));
+        copy.setLocationName(rs.getString("location_name")); // lấy tên kho từ bảng inventory
         return copy;
     }
 }

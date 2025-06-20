@@ -2,18 +2,20 @@ package model;
 
 public class BookCopy {
     private int copyId;
-    private String state;         // trạng thái: sẵn sàng, mượn, hỏng, ...
-    private int inventoryId;      // kho chứa sách
-    private int titleId;          // đầu sách liên kết
+    private String state;        
+    private int inventoryId;     
+    private int titleId;         
+    private String locationName; 
 
     public BookCopy() {
     }
 
-    public BookCopy(int copyId, String state, int inventoryId, int titleId) {
+    public BookCopy(int copyId, String state, int inventoryId, int titleId, String locationName) {
         this.copyId = copyId;
         this.state = state;
         this.inventoryId = inventoryId;
         this.titleId = titleId;
+        this.locationName = locationName;
     }
 
     // Getters và setters
@@ -28,4 +30,7 @@ public class BookCopy {
 
     public int getTitleId() { return titleId; }
     public void setTitleId(int titleId) { this.titleId = titleId; }
+
+    public String getLocationName() { return locationName; }
+    public void setLocationName(String locationName) { this.locationName = locationName; }
 }

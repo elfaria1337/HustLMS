@@ -65,3 +65,67 @@ Phân tích xu hướng mượn sách theo thể loại, tác giả
 Cảnh báo tồn kho, sách hư hỏng, phạt chưa thanh toán
 
 Xuất báo cáo ra PDF, Excel
+
+# Chức năng dành cho Độc giả (Reader)
+
+## Đăng ký tài khoản
+
+Đăng ký trực tuyến với các thông tin cá nhân (họ tên, số điện thoại, email, ngày sinh, địa chỉ) và thông tin đăng nhập (username, password).
+
+Xác minh đăng ký qua email hoặc SMS.
+
+Hoặc đăng ký trực tiếp với nhân viên thư viện.
+
+## Đăng nhập và quản lý tài khoản
+
+Đăng nhập bằng username/password.
+
+Cập nhật thông tin cá nhân (địa chỉ, số điện thoại, email, ...).
+
+Đổi mật khẩu.
+
+## Tìm kiếm và tra cứu sách
+
+Tìm kiếm đầu sách theo tên, tác giả, thể loại, nhà xuất bản,...
+
+Xem chi tiết đầu sách, thông tin bản sao sách còn trong kho.
+
+## Đặt trước sách (Reservation)
+
+Thực hiện đặt trước các đầu sách còn hạn chế.
+
+Quản lý trạng thái đặt trước (chờ xử lý, đã chấp nhận, từ chối).
+
+## Mượn sách (Loan)
+
+Xem lịch sử phiếu mượn của mình.
+
+Thực hiện mượn sách thông qua phiếu mượn (Loan).
+
+Xem chi tiết phiếu mượn, thời hạn trả sách.
+
+## Trả sách và phạt (Fine)
+
+Xem thông tin phạt (nếu có) do trả sách muộn hoặc hư hỏng.
+
+Thanh toán phạt và các hóa đơn liên quan (Invoice).
+
+## Thông báo và nhắc nhở
+
+Nhận thông báo qua email hoặc SMS về:
+
+Sách sắp đến hạn trả.
+
+Phạt tiền hoặc hóa đơn thanh toán.
+
+Thông tin đặt trước sách.
+
+## Xem lịch sử hoạt động
+
+Xem lịch sử mượn sách.
+
+Xem lịch sử vi phạm (phạt).
+
+Xem lịch sử thanh toán hóa đơn.
+
+
