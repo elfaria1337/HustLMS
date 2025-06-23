@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controller.reader.DashboardReaderController">
+
+    <!-- Thanh bên trái menu -->
+    <left>
+        <VBox spacing="10" style="-fx-background-color: #2f4f4f; -fx-padding: 10;">
+            <Label text="Menu Reader" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px;"/>
+            <Button fx:id="btnBookSearch" text="Tìm kiếm sách" maxWidth="Infinity"/>
+            <Button fx:id="btnLoanHistory" text="Lịch sử mượn sách" maxWidth="Infinity"/>
+            <Button fx:id="btnReservationHistory" text="Lịch sử đặt trước" maxWidth="Infinity"/>
+            <Button fx:id="btnFinePayment" text="Phạt &amp; Thanh toán" maxWidth="Infinity"/>
+        </VBox>
+    </left>
+
+    <!-- Phần nội dung chính -->
+    <center>
+        <StackPane fx:id="contentPane" style="-fx-background-color: white; -fx-padding: 15;">
+            <Label fx:id="defaultLabel" text="Chào mừng đến Reader Dashboard!" style="-fx-font-size: 24px;"/>
+        </StackPane>
+    </center>
+
+</BorderPane>

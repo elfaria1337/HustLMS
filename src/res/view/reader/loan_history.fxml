@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.reader.LoanHistoryController" spacing="10">
+
+    <padding>
+        <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
+
+    <Label text="Lịch sử phiếu mượn" style="-fx-font-weight: bold; -fx-font-size: 16px;" />
+
+    <!-- Bảng danh sách phiếu mượn -->
+    <TableView fx:id="loanTable" prefHeight="250">
+        <columns>
+            <TableColumn fx:id="colLoanId" text="Mã phiếu" prefWidth="80"/>
+            <TableColumn fx:id="colLoanDate" text="Ngày mượn" prefWidth="120"/>
+            <TableColumn fx:id="colDueDate" text="Hạn trả" prefWidth="120"/>
+        </columns>
+    </TableView>
+
+    <Label text="Chi tiết phiếu mượn" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+
+    <!-- Bảng chi tiết phiếu mượn -->
+    <TableView fx:id="loanDetailTable" prefHeight="200">
+        <columns>
+            <TableColumn fx:id="colCopyId" text="ID Bản sao" prefWidth="80"/>
+            <TableColumn fx:id="colTitleName" text="Tên sách" prefWidth="250"/>
+            <TableColumn fx:id="colReturnDate" text="Ngày trả" prefWidth="120"/>
+            <TableColumn fx:id="colState" text="Tình trạng bản sao" prefWidth="120"/>
+        </columns>
+    </TableView>
+
+    <HBox alignment="CENTER_RIGHT" spacing="10">
+        <Button text="Tạo phiếu mượn mới" onAction="#handleCreateNewLoan"/>
+        <Button text="Xem lịch sử đặt trước" onAction="#handleViewReservationHistory"/>
+    </HBox>
+
+</VBox>

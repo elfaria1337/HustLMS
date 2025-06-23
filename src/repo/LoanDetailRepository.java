@@ -41,6 +41,24 @@ public class LoanDetailRepository {
         return null;
     }
 
+    public List<LoanDetail> findByLoanId(int loanId) {
+        List<LoanDetail> list = new ArrayList<>();
+        String sql = "SELECT * FROM loan_detail WHERE loan_id = ? ORDER BY loan_detail_id";
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, loanId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    LoanDetail detail = mapResultSetToLoanDetail(rs);
+                    list.add(detail);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public boolean insert(LoanDetail detail) {
         String sql = "INSERT INTO loan_detail(return_date, loan_id, copy_id) VALUES (?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();

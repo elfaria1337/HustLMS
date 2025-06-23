@@ -41,6 +41,23 @@ public class ReservationRepository {
         return null;
     }
 
+    public List<Reservation> findByReaderId(int readerId) {
+        List<Reservation> list = new ArrayList<>();
+        String sql = "SELECT * FROM reservation WHERE reader_id = ? ORDER BY reservation_date DESC";
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, readerId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToReservation(rs));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public boolean insert(Reservation res) {
         String sql = "INSERT INTO reservation(reservation_date, status, reader_id, title_id) VALUES (?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();

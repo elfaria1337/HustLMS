@@ -26,7 +26,9 @@ public class BookCopyRepository {
     }
 
     public BookCopy findById(int id) {
-        String sql = "SELECT * FROM book_copy WHERE copy_id = ?";
+        String sql = "SELECT bc.*, i.location_name" + " FROM book_copy bc "
+            + "JOIN inventory i ON bc.inventory_id = i.inventory_id "
+            + "WHERE bc.copy_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);

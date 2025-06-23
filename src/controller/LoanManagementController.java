@@ -10,9 +10,11 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import model.BookCopy;
 import model.Loan;
 import model.LoanDetail;
 import model.Reservation;
+import repo.BookCopyRepository;
 import repo.LoanDetailRepository;
 import repo.LoanRepository;
 import repo.ReservationRepository;
@@ -49,6 +51,7 @@ public class LoanManagementController {
     private LoanRepository loanRepo = new LoanRepository();
     private LoanDetailRepository loanDetailRepo = new LoanDetailRepository();
     private ReservationRepository reservationRepo = new ReservationRepository();
+    private BookCopyRepository bookCopyRepo = new BookCopyRepository();
 
     private ObservableList<Loan> loanList = FXCollections.observableArrayList();
     private ObservableList<LoanDetail> loanDetailList = FXCollections.observableArrayList();
@@ -163,14 +166,15 @@ public class LoanManagementController {
     // ===== LoanDetail handlers =====
     public void handleAddLoanDetail() {
         try {
-            // Tạo một đối tượng LoanDetail mới
             LoanDetail newDetail = new LoanDetail();
-
-            // Mở dialog thêm/sửa chi tiết mượn
             boolean saveClicked = showLoanDetailEditDialog(newDetail);
             if (saveClicked) {
                 // Lưu LoanDetail vào DB
                 loanDetailRepo.save(newDetail);
+
+                // Cập nhật trạng thái bản sao sách thành "Đang mượn"
+                updateBookCopyStatus(newDetail.getCopyId(), "Đang mượn");
+
                 // Cập nhật lại danh sách chi tiết mượn
                 loadData();
             }
@@ -186,16 +190,26 @@ public class LoanManagementController {
             return;
         }
         try {
-            // Mở dialog sửa chi tiết mượn với dữ liệu đã chọn
             boolean saveClicked = showLoanDetailEditDialog(selected);
             if (saveClicked) {
-                // Cập nhật dữ liệu vào DB
                 loanDetailRepo.save(selected);
-                // Cập nhật lại danh sách chi tiết mượn
+
+                // Cập nhật trạng thái bản sao sách thành "Đang mượn"
+                updateBookCopyStatus(selected.getCopyId(), "Đang mượn");
+
                 loadData();
             }
         } catch (Exception e) {
             showError("Lỗi khi sửa chi tiết mượn", e.getMessage());
+        }
+    }
+
+    // Phương thức hỗ trợ cập nhật trạng thái bản sao sách
+    private void updateBookCopyStatus(int copyId, String newStatus) {
+        BookCopy copy = bookCopyRepo.findById(copyId);
+        if (copy != null) {
+            copy.setState(newStatus);
+            bookCopyRepo.update(copy);
         }
     }
 

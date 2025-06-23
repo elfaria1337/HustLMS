@@ -27,6 +27,10 @@
         </columns>
     </TableView>
 
+    <HBox alignment="CENTER_RIGHT" spacing="10">
+    <Button text="Đặt trước đầu sách" onAction="#handleReserveBook"/>
+    </HBox>
+
     <!-- Bảng chi tiết bản sao sách của đầu sách được chọn -->
     <Label text="Thông tin bản sao sách (Inventory)" style="-fx-font-weight: bold;"/>
     <TableView fx:id="bookCopyTable" prefHeight="200" prefWidth="800">
@@ -36,5 +40,4 @@
             <TableColumn fx:id="colState" text="Tình trạng" prefWidth="150"/>
         </columns>
     </TableView>
-
 </VBox>

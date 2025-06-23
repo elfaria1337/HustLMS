@@ -8,9 +8,12 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import model.BookCopy;
 import model.BookTitle;
+import model.Reservation;
 import repo.BookCopyRepository;
 import repo.BookTitleRepository;
+import repo.ReservationRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public class BookSearchController {
@@ -31,9 +34,12 @@ public class BookSearchController {
 
     private BookTitleRepository bookTitleRepo = new BookTitleRepository();
     private BookCopyRepository bookCopyRepo = new BookCopyRepository();
+    private ReservationRepository reservationRepo = new ReservationRepository();
 
     private ObservableList<BookTitle> bookTitleList = FXCollections.observableArrayList();
     private ObservableList<BookCopy> bookCopyList = FXCollections.observableArrayList();
+
+    private int currentReaderId = 2; // TODO: lấy ID reader từ phiên đăng nhập thực tế
 
     @FXML
     public void initialize() {
@@ -87,5 +93,58 @@ public class BookSearchController {
         }
         List<BookTitle> filtered = bookTitleRepo.searchByKeyword(keyword.trim());
         bookTitleList.setAll(filtered);
+    }
+
+    @FXML
+    private void handleReserveBook() {
+        BookTitle selected = bookTitleTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showWarning("Vui lòng chọn đầu sách để đặt trước.");
+            return;
+        }
+
+        // Kiểm tra còn bản sao "Sẵn sàng" hay không
+        List<BookCopy> copies = bookCopyRepo.findByTitleId(selected.getTitleId());
+        boolean hasAvailableCopy = copies.stream()
+                                        .anyMatch(copy -> copy.getState().equalsIgnoreCase("Sẵn sàng"));
+        if (hasAvailableCopy) {
+            showInfo("Hiện tại đầu sách còn bản sao sẵn sàng, không cần đặt trước.");
+            return;
+        }
+
+        // Tạo đặt trước
+        Reservation res = new Reservation();
+        res.setReservationDate(LocalDate.now());
+        res.setStatus("Pending"); // trạng thái "Chờ xử lý"
+        res.setReaderId(currentReaderId);
+        res.setTitleId(selected.getTitleId());
+
+        boolean success = reservationRepo.insert(res);
+        if (success) {
+            showInfo("Đặt trước thành công! Vui lòng chờ thông báo xử lý.");
+        } else {
+            showError("Đặt trước thất bại, vui lòng thử lại.");
+        }
+    }
+
+    private void showInfo(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Thông báo");
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private void showWarning(String message) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Cảnh báo");
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private void showError(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Lỗi");
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }
