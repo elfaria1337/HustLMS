@@ -20,10 +20,10 @@
             <Label text="Ngày trả hạn:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
             <DatePicker fx:id="dueDatePicker" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
-            <Label text="Mã độc giả:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-            <TextField fx:id="readerIdField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+            <Label text="Số điện thoại:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <TextField fx:id="phoneField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-            <Label fx:id="readerIdErrorLabel" text="ID độc giả không tồn tại!" GridPane.rowIndex="3" GridPane.columnIndex="1" style="-fx-text-fill: red;" visible="false"/>
+            <Label fx:id="phoneErrorLabel" text="Số điện thoại không tồn tại!" GridPane.rowIndex="3" GridPane.columnIndex="1" style="-fx-text-fill: red;" visible="false"/>
 
         </GridPane>
 

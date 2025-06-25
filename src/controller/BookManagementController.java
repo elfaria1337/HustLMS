@@ -14,11 +14,13 @@ import model.BookCopy;
 import model.BookTitle;
 import model.Inventory;
 import repo.BookCopyRepository;
+import repo.BookCopySummaryRepository;
 import repo.BookTitleRepository;
 import repo.InventoryRepository;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class BookManagementController {
@@ -31,6 +33,7 @@ public class BookManagementController {
     @FXML private TableColumn<BookTitle, String> colGenre;
     @FXML private TableColumn<BookTitle, String> colPublisher;
     @FXML private TableColumn<BookTitle, Integer> colPublishYear;
+    @FXML private TableColumn<BookTitle, Integer> colCopyCount;  // cột số lượng bản sao
     @FXML private TextField searchField;
 
     // Inventory
@@ -49,11 +52,14 @@ public class BookManagementController {
     private BookTitleRepository bookTitleRepo = new BookTitleRepository();
     private InventoryRepository inventoryRepo = new InventoryRepository();
     private BookCopyRepository bookCopyRepo = new BookCopyRepository();
+    private BookCopySummaryRepository bookCopySummaryRepo = new BookCopySummaryRepository();
 
     // ObservableLists
-    private ObservableList<BookTitle> bookTitleList = FXCollections.observableArrayList();
     private ObservableList<Inventory> inventoryList = FXCollections.observableArrayList();
     private ObservableList<BookCopy> bookCopyList = FXCollections.observableArrayList();
+
+    // Cache số lượng bản sao (titleId -> count)
+    private Map<Integer, Integer> bookCopyCountMap;
 
     @FXML
     public void initialize() {
@@ -68,6 +74,22 @@ public class BookManagementController {
             return new ReadOnlyObjectWrapper<>(year != null ? year : 0);
         });
 
+        // Cell factory cột số lượng bản sao dùng map cache
+        colCopyCount.setCellValueFactory(cellData -> {
+            int titleId = cellData.getValue().getTitleId();
+            int count = bookCopyCountMap != null ? bookCopyCountMap.getOrDefault(titleId, 0) : 0;
+            return new ReadOnlyObjectWrapper<>(count);
+        });
+
+        // Setup cột widths (tuỳ chỉnh cho phù hợp)
+        colTitleId.setPrefWidth(40);
+        colTitleName.setPrefWidth(200);
+        colAuthor.setPrefWidth(140);
+        colGenre.setPrefWidth(140);
+        colPublisher.setPrefWidth(100);
+        colPublishYear.setPrefWidth(60);
+        colCopyCount.setPrefWidth(80);
+
         // Setup Inventory columns
         colInventoryId.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getInventoryId()));
         colLocationName.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getLocationName()));
@@ -76,7 +98,7 @@ public class BookManagementController {
         colCopyId.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getCopyId()));
         colCopyState.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getState()));
 
-        // For inventory name and book title name, we need to fetch names based on IDs
+        // Inventory name và BookTitle name cho BookCopy bảng
         colCopyInventory.setCellValueFactory(cellData -> {
             int invId = cellData.getValue().getInventoryId();
             Inventory inv = inventoryRepo.findById(invId);
@@ -91,9 +113,10 @@ public class BookManagementController {
             return new javafx.beans.property.SimpleStringProperty(name);
         });
 
+        // Tìm kiếm đầu sách theo tên hoặc tác giả
         searchField.textProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue == null || newValue.trim().isEmpty()) {
-                loadBookTitles(); // load tất cả đầu sách khi ô tìm trống
+                loadBookTitles();
             } else {
                 List<BookTitle> filtered = bookTitleRepo.searchByTitleOrAuthor(newValue.trim());
                 ObservableList<BookTitle> filteredList = FXCollections.observableArrayList(filtered);
@@ -104,10 +127,16 @@ public class BookManagementController {
         loadData();
     }
 
+    private void loadBookTitles() {
+        List<BookTitle> bookTitles = bookTitleRepo.findAll();
+        bookCopyCountMap = bookCopySummaryRepo.getAllCopyCounts(); // Tải cache số lượng bản sao
+
+        ObservableList<BookTitle> list = FXCollections.observableArrayList(bookTitles);
+        bookTitleTable.setItems(list);
+    }
+
     private void loadData() {
-        List<BookTitle> books = bookTitleRepo.findAll();
-        bookTitleList.setAll(books);
-        bookTitleTable.setItems(bookTitleList);
+        loadBookTitles();
 
         List<Inventory> inventories = inventoryRepo.findAll();
         inventoryList.setAll(inventories);
@@ -119,35 +148,32 @@ public class BookManagementController {
     }
 
     // ========== BookTitle handlers ==========
+
     @FXML
     public void handleAddBookTitle() {
         try {
-            // Load form nhập liệu đầu sách
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/res/view/book_title_form.fxml"));
             Parent page = loader.load();
 
-            // Tạo stage dialog
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Thêm đầu sách mới");
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(bookTitleTable.getScene().getWindow());
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
+            dialogStage.setWidth(300);
 
-            // Lấy controller form và truyền stage cho nó
             BookTitleFormController controller = loader.getController();
             controller.setDialogStage(dialogStage);
-            controller.setBookTitle(null);  // null = thêm mới
+            controller.setBookTitle(null);
 
-            // Hiển thị dialog và chờ người dùng đóng
             dialogStage.showAndWait();
 
-            // Nếu người dùng đã lưu
             if (controller.isSaveClicked()) {
-                model.BookTitle newBookTitle = controller.getBookTitle();
+                BookTitle newBookTitle = controller.getBookTitle();
                 boolean success = bookTitleRepo.insert(newBookTitle);
                 if (success) {
-                    loadBookTitles(); // Tải lại danh sách đầu sách lên bảng
+                    loadBookTitles();
                     showInfo("Thêm đầu sách thành công.");
                 } else {
                     showError("Thêm đầu sách thất bại.");
@@ -159,6 +185,7 @@ public class BookManagementController {
         }
     }
 
+    @FXML
     public void handleEditBookTitle() {
         BookTitle selected = bookTitleTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
@@ -175,11 +202,11 @@ public class BookManagementController {
             dialogStage.initOwner(bookTitleTable.getScene().getWindow());
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
-            dialogStage.setWidth(400);
+            dialogStage.setWidth(300);
 
             BookTitleFormController controller = loader.getController();
             controller.setDialogStage(dialogStage);
-            controller.setBookTitle(selected); // truyền dữ liệu đầu sách cần sửa
+            controller.setBookTitle(selected);
 
             dialogStage.showAndWait();
 
@@ -187,7 +214,7 @@ public class BookManagementController {
                 BookTitle updatedBookTitle = controller.getBookTitle();
                 boolean success = bookTitleRepo.update(updatedBookTitle);
                 if (success) {
-                    loadBookTitles(); // reload danh sách đầu sách
+                    loadBookTitles();
                     showInfo("Sửa đầu sách thành công.");
                 } else {
                     showError("Sửa đầu sách thất bại.");
@@ -199,6 +226,7 @@ public class BookManagementController {
         }
     }
 
+    @FXML
     public void handleDeleteBookTitle() {
         BookTitle selected = bookTitleTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
@@ -217,6 +245,8 @@ public class BookManagementController {
     }
 
     // ========== Inventory handlers ==========
+
+    @FXML
     public void handleAddInventory() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/res/view/inventory_form.fxml"));
@@ -228,10 +258,11 @@ public class BookManagementController {
             dialogStage.initOwner(inventoryTable.getScene().getWindow());
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
+            dialogStage.setWidth(300);
 
             InventoryFormController controller = loader.getController();
             controller.setDialogStage(dialogStage);
-            controller.setInventory(null); // Thêm mới
+            controller.setInventory(null);
 
             dialogStage.showAndWait();
 
@@ -239,7 +270,7 @@ public class BookManagementController {
                 Inventory newInventory = controller.getInventory();
                 boolean success = inventoryRepo.insert(newInventory);
                 if (success) {
-                    loadInventories(); // Tải lại danh sách kho
+                    loadInventories();
                     showInfo("Thêm kho sách thành công.");
                 } else {
                     showError("Thêm kho sách thất bại.");
@@ -251,6 +282,7 @@ public class BookManagementController {
         }
     }
 
+    @FXML
     public void handleEditInventory() {
         Inventory selected = inventoryTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
@@ -267,10 +299,11 @@ public class BookManagementController {
             dialogStage.initOwner(inventoryTable.getScene().getWindow());
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
+            dialogStage.setWidth(300);
 
             InventoryFormController controller = loader.getController();
             controller.setDialogStage(dialogStage);
-            controller.setInventory(selected); // Truyền đối tượng cần sửa
+            controller.setInventory(selected);
 
             dialogStage.showAndWait();
 
@@ -278,7 +311,7 @@ public class BookManagementController {
                 Inventory updatedInventory = controller.getInventory();
                 boolean success = inventoryRepo.update(updatedInventory);
                 if (success) {
-                    loadInventories(); // Tải lại danh sách kho
+                    loadInventories();
                     showInfo("Sửa kho sách thành công.");
                 } else {
                     showError("Sửa kho sách thất bại.");
@@ -290,6 +323,7 @@ public class BookManagementController {
         }
     }
 
+    @FXML
     public void handleDeleteInventory() {
         Inventory selected = inventoryTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
@@ -308,12 +342,14 @@ public class BookManagementController {
     }
 
     private void loadInventories() {
-        List<Inventory> inventories = inventoryRepo.findAll();  // inventoryRepo là repository quản lý kho sách
+        List<Inventory> inventories = inventoryRepo.findAll();
         ObservableList<Inventory> inventoryList = FXCollections.observableArrayList(inventories);
         inventoryTable.setItems(inventoryList);
     }
 
     // ========== BookCopy handlers ==========
+
+    @FXML
     public void handleAddBookCopy() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/res/view/book_copy_form.fxml"));
@@ -325,10 +361,17 @@ public class BookManagementController {
             dialogStage.initOwner(bookCopyTable.getScene().getWindow());
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
+            dialogStage.setWidth(300);
 
             BookCopyFormController controller = loader.getController();
             controller.setDialogStage(dialogStage);
-            controller.setBookCopy(null); // thêm mới
+            controller.setBookCopy(null);
+
+            BookTitle selectedBook = bookTitleTable.getSelectionModel().getSelectedItem();
+            controller.setSelectedBookTitle(selectedBook);
+
+            Inventory selectedInv = inventoryTable.getSelectionModel().getSelectedItem();
+            controller.setSelectedInventory(selectedInv);
 
             dialogStage.showAndWait();
 
@@ -348,6 +391,7 @@ public class BookManagementController {
         }
     }
 
+    @FXML
     public void handleEditBookCopy() {
         BookCopy selected = bookCopyTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
@@ -364,10 +408,11 @@ public class BookManagementController {
             dialogStage.initOwner(bookCopyTable.getScene().getWindow());
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
+            dialogStage.setWidth(300);
 
             BookCopyFormController controller = loader.getController();
             controller.setDialogStage(dialogStage);
-            controller.setBookCopy(selected); // sửa
+            controller.setBookCopy(selected);
 
             dialogStage.showAndWait();
 
@@ -386,6 +431,8 @@ public class BookManagementController {
             showError("Lỗi khi mở form sửa bản sao sách.");
         }
     }
+
+    @FXML
     public void handleDeleteBookCopy() {
         BookCopy selected = bookCopyTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
@@ -404,12 +451,13 @@ public class BookManagementController {
     }
 
     private void loadBookCopies() {
-        List<BookCopy> copies = bookCopyRepo.findAll(); // gọi repo lấy dữ liệu
+        List<BookCopy> copies = bookCopyRepo.findAll();
         ObservableList<BookCopy> copyList = FXCollections.observableArrayList(copies);
         bookCopyTable.setItems(copyList);
     }
 
     // === Helper dialog methods ===
+
     private void showInfo(String msg) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Thông báo");
@@ -417,14 +465,6 @@ public class BookManagementController {
         alert.showAndWait();
     }
 
-    // Nạp lại danh sách đầu sách và hiển thị lên bảng
-    private void loadBookTitles() {
-        List<BookTitle> bookTitles = bookTitleRepo.findAll();
-        ObservableList<BookTitle> list = FXCollections.observableArrayList(bookTitles);
-        bookTitleTable.setItems(list);
-    }
-
-    // Hiển thị thông báo lỗi
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Lỗi");

@@ -195,4 +195,18 @@ public class LoanRepository {
         }
         return 0;
     }
+
+    public Integer getLatestLoanId() {
+        String sql = "SELECT loan_id FROM loan ORDER BY loan_id DESC LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt("loan_id");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null; // Nếu chưa có phiếu mượn nào
+    }
 }

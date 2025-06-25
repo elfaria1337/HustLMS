@@ -26,9 +26,7 @@
 
 **3.2. Quản lý mượn - trả và thanh toán**
 
-- Độc giả có thể mượn sách theo 2 cách:
-  o Mượn trực tiếp tại thư viện: Nhân viên sẽ kiểm tra tình trạng sách và nhập giao dịch mượn vào hệ thống nếu sách sẵn sàng để mượn.
-  o Gửi yêu cầu mượn online: Độc giả gửi yêu cầu trực tuyến; hệ thống cập nhật trạng thái và gửi thông báo khi yêu cầu được duyệt. Sau khi duyệt, độc giả đến thư viện lấy sách, nhân viên xác nhận giao dịch mượn thực tế.
+- Độc giả có thể mượn sách trực tiếp tại thư viện: Nhân viên sẽ kiểm tra tình trạng sách và nhập giao dịch mượn vào hệ thống nếu sách sẵn sàng để mượn.
 - Hạn mức:
   o Số sách tối đa được mượn mỗi lần: 5 cuốn
   o Thời hạn mượn tối đa: 30 ngày, có thể gia hạn 1–2 lần, mỗi lần tối đa 7 ngày nếu không có độc giả khác đặt trước

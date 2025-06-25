@@ -4,6 +4,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 import model.Loan;
+import model.Reader;
 import repo.LoanRepository;
 import repo.ReaderRepository;
 
@@ -16,10 +17,10 @@ public class LoanFormController {
     private DatePicker dueDatePicker;
 
     @FXML
-    private TextField readerIdField;
+    private TextField phoneField;
 
     @FXML
-    private Label readerIdErrorLabel;
+    private Label phoneErrorLabel;
 
     private Stage dialogStage;
     private Loan loan;
@@ -30,21 +31,18 @@ public class LoanFormController {
 
     @FXML
     public void initialize() {
-        readerIdErrorLabel.setVisible(false);
-        readerIdField.setText("");
-        readerIdField.textProperty().addListener((obs, oldVal, newVal) -> {
+        phoneErrorLabel.setVisible(false);
+        phoneField.setText("");
+        phoneField.textProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal == null || newVal.trim().isEmpty()) {
-                readerIdErrorLabel.setVisible(false);  // để trống thì không báo lỗi
+                phoneErrorLabel.setVisible(false);
                 return;
             }
-            try {
-                int id = Integer.parseInt(newVal.trim());
-                boolean exists = readerRepo.findById(id) != null; // Kiểm tra có tồn tại không
-                readerIdErrorLabel.setVisible(!exists);
-            } catch (NumberFormatException e) {
-                readerIdErrorLabel.setText("ID độc giả phải là số nguyên!");
-                readerIdErrorLabel.setVisible(true);
-            }
+            boolean exists = false;
+            // Kiểm tra Reader tồn tại theo số điện thoại
+            exists = readerRepo.searchByNameOrPhone(newVal.trim()).stream()
+                    .anyMatch(r -> newVal.trim().equals(r.getPhone()));
+            phoneErrorLabel.setVisible(!exists);
         });
     }
 
@@ -58,10 +56,16 @@ public class LoanFormController {
             loanDatePicker.setValue(loan.getLoanDate());
             dueDatePicker.setValue(loan.getDueDate());
 
+            // Lấy số điện thoại từ readerId nếu có
             if (loan.getReaderId() > 0) {
-                readerIdField.setText(String.valueOf(loan.getReaderId()));
+                Reader reader = readerRepo.findById(loan.getReaderId());
+                if (reader != null && reader.getPhone() != null) {
+                    phoneField.setText(reader.getPhone());
+                } else {
+                    phoneField.setText("");
+                }
             } else {
-                readerIdField.setText("");
+                phoneField.setText("");
             }
         }
     }
@@ -80,12 +84,22 @@ public class LoanFormController {
             if (loan == null) {
                 loan = new Loan();
             }
-            // loanId thường tự sinh DB, nên không set trong form
             loan.setLoanDate(loanDatePicker.getValue());
             loan.setDueDate(dueDatePicker.getValue());
-            loan.setReaderId(Integer.parseInt(readerIdField.getText().trim()));
 
-            // Lưu xuống DB (hoặc gọi service)
+            // Tìm readerId theo số điện thoại nhập
+            String phone = phoneField.getText().trim();
+            Reader reader = readerRepo.searchByNameOrPhone(phone).stream()
+                    .filter(r -> phone.equals(r.getPhone()))
+                    .findFirst().orElse(null);
+            if (reader == null) {
+                phoneErrorLabel.setVisible(true);
+                showAlert("Lỗi", "Số điện thoại không tồn tại trong hệ thống.");
+                return;
+            }
+
+            loan.setReaderId(reader.getReaderId());
+
             loanRepo.save(loan);
 
             saveClicked = true;
@@ -107,16 +121,13 @@ public class LoanFormController {
         if (dueDatePicker.getValue() == null) {
             errorMessage += "Ngày trả hạn không được để trống!\n";
         }
-        if (readerIdField.getText() == null || readerIdField.getText().trim().isEmpty()) {
-            errorMessage += "Mã độc giả không được để trống!\n";
+        if (phoneField.getText() == null || phoneField.getText().trim().isEmpty()) {
+            errorMessage += "Số điện thoại không được để trống!\n";
         } else {
-            try {
-                int id = Integer.parseInt(readerIdField.getText().trim());
-                if (readerRepo.findById(id) == null) {
-                    errorMessage += "ID độc giả không tồn tại!\n";
-                }
-            } catch (NumberFormatException e) {
-                errorMessage += "Mã độc giả phải là số nguyên!\n";
+            boolean exists = readerRepo.searchByNameOrPhone(phoneField.getText().trim()).stream()
+                    .anyMatch(r -> phoneField.getText().trim().equals(r.getPhone()));
+            if (!exists) {
+                errorMessage += "Số điện thoại không tồn tại trong hệ thống!\n";
             }
         }
 
@@ -130,5 +141,14 @@ public class LoanFormController {
             return false;
         }
         return true;
+    }
+
+    private void showAlert(String header, String content) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);  
+        alert.initOwner(dialogStage);                     
+        alert.setTitle("Thông báo");
+        alert.setHeaderText(header);                     
+        alert.setContentText(content);                    
+        alert.showAndWait();                        
     }
 }

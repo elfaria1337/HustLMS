@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BookCopyRepository {
-
     public List<BookCopy> findAll() {
         List<BookCopy> list = new ArrayList<>();
         String sql = "SELECT bc.*, i.location_name " +
@@ -65,6 +64,40 @@ public class BookCopyRepository {
             e.printStackTrace();
         }
         return list;
+    }
+
+    public Integer findAvailableCopyIdByTitleName(String titleName) {
+        String sql = "SELECT bc.copy_id FROM book_copy bc " +
+                    "JOIN book_title bt ON bc.title_id = bt.title_id " +
+                    "WHERE bt.title_name ILIKE ? AND bc.state = 'Sẵn sàng' " +
+                    "ORDER BY bc.copy_id LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, "%" + titleName + "%");
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("copy_id");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public int countByTitleId(int titleId) {
+        String sql = "SELECT COUNT(*) FROM book_copy WHERE title_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, titleId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     public boolean insert(BookCopy copy) {

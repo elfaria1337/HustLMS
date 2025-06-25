@@ -25,14 +25,23 @@
         <TextField fx:id="addressField" GridPane.rowIndex="2" GridPane.columnIndex="1" />
 
         <Label text="Số điện thoại:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-        <TextField fx:id="phoneField" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+        <VBox GridPane.rowIndex="3" GridPane.columnIndex="1" spacing="2">
+            <TextField fx:id="phoneField" />
+            <Label fx:id="lblPhoneWarning" text="Số điện thoại đã tồn tại" style="-fx-text-fill: red;" visible="false"/>
+        </VBox>
 
         <Label text="Email:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-        <TextField fx:id="emailField" GridPane.rowIndex="4" GridPane.columnIndex="1" />
+        <VBox GridPane.rowIndex="4" GridPane.columnIndex="1" spacing="2">
+            <TextField fx:id="emailField" />
+            <Label fx:id="lblEmailWarning" text="Email đã tồn tại" style="-fx-text-fill: red;" visible="false"/>
+        </VBox>
 
         <!-- Thông tin tài khoản -->
         <Label text="Username:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
-        <TextField fx:id="usernameField" GridPane.rowIndex="5" GridPane.columnIndex="1" />
+        <VBox GridPane.rowIndex="5" GridPane.columnIndex="1" spacing="2">
+            <TextField fx:id="usernameField" />
+            <Label fx:id="lblUsernameWarning" text="Username đã tồn tại" style="-fx-text-fill: red;" visible="false"/>
+        </VBox>
 
         <Label text="Password:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
         <PasswordField fx:id="passwordField" GridPane.rowIndex="6" GridPane.columnIndex="1" />

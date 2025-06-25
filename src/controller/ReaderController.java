@@ -16,7 +16,9 @@ import repo.*;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ReaderController {
 
@@ -28,6 +30,7 @@ public class ReaderController {
     @FXML private TableColumn<Reader, String> colAddress;
     @FXML private TableColumn<Reader, String> colPhone;
     @FXML private TableColumn<Reader, String> colEmail;
+    @FXML private TableColumn<Reader, String> colStatus;
 
     // Lịch sử
     @FXML private TableView<Loan> loanHistoryTable;
@@ -57,6 +60,7 @@ public class ReaderController {
     private ObservableList<Invoice> invoiceList = FXCollections.observableArrayList();
 
     private DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private Map<Integer, String> readerStatusMap = new HashMap<>();
 
     @FXML
     public void initialize() {
@@ -67,7 +71,12 @@ public class ReaderController {
         colAddress.setCellValueFactory(data -> new ReadOnlyObjectWrapper<>(data.getValue().getAddress()));
         colPhone.setCellValueFactory(data -> new ReadOnlyObjectWrapper<>(data.getValue().getPhone()));
         colEmail.setCellValueFactory(data -> new ReadOnlyObjectWrapper<>(data.getValue().getEmail()));
-
+        colStatus.setCellValueFactory(data -> {
+            Reader reader = data.getValue();
+            String status = readerStatusMap.get(reader.getReaderId());
+            return new ReadOnlyObjectWrapper<>(status != null ? status : "");
+        });
+        
         // Lịch sử mượn
         colLoanId.setCellValueFactory(data -> new ReadOnlyObjectWrapper<>(data.getValue().getLoanId()));
         colLoanDate.setCellValueFactory(data -> new ReadOnlyObjectWrapper<>(data.getValue().getLoanDate().format(dateFormatter)));
@@ -115,6 +124,13 @@ public class ReaderController {
     private void loadReaders() {
         List<Reader> readers = readerRepo.findAll();
         readerList.setAll(readers);
+
+        readerStatusMap.clear();
+        for (Reader r : readers) {
+            Account acc = accountRepo.findByReaderId(r.getReaderId());
+            readerStatusMap.put(r.getReaderId(), acc != null ? acc.getStatus() : "Chưa có tài khoản");
+        }
+
         readerTable.setItems(readerList);
     }
 

@@ -26,16 +26,17 @@
                     <Button onAction="#handleEditBookTitle" text="Sửa đầu sách" />
                     <Button onAction="#handleDeleteBookTitle" text="Xóa đầu sách" />
                 </HBox>
-                <TableView fx:id="bookTitleTable" prefHeight="300">
-                    <columns>
-                        <TableColumn fx:id="colTitleId" prefWidth="50" text="ID" />
-                        <TableColumn fx:id="colTitleName" prefWidth="200" text="Tên sách" />
-                        <TableColumn fx:id="colAuthor" prefWidth="139.99993896484375" text="Tác giả" />
-                        <TableColumn fx:id="colGenre" prefWidth="161.60000610351562" text="Thể loại" />
-                        <TableColumn fx:id="colPublisher" prefWidth="112.00009155273438" text="NXB" />
-                        <TableColumn fx:id="colPublishYear" prefWidth="88.0" text="Năm xuất bản" />
-                    </columns>
-                </TableView>
+                    <TableView fx:id="bookTitleTable" prefHeight="300">
+                        <columns>
+                            <TableColumn fx:id="colTitleId" prefWidth="40" text="ID" />
+                            <TableColumn fx:id="colTitleName" prefWidth="200" text="Tên sách" />
+                            <TableColumn fx:id="colAuthor" prefWidth="140" text="Tác giả" />
+                            <TableColumn fx:id="colGenre" prefWidth="140" text="Thể loại" />
+                            <TableColumn fx:id="colPublisher" prefWidth="100" text="NXB" />
+                            <TableColumn fx:id="colPublishYear" prefWidth="60" text="Năm XB" />
+                            <TableColumn fx:id="colCopyCount" prefWidth="80" text="Số lượng" />
+                        </columns>
+                    </TableView>
             </VBox>
         </Tab>
 

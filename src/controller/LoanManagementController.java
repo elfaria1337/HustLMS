@@ -240,11 +240,11 @@ public class LoanManagementController {
         dialogStage.initOwner(loanTable.getScene().getWindow());  // Hoặc một stage cha phù hợp
         Scene scene = new Scene(page);
         dialogStage.setScene(scene);
-        dialogStage.setWidth(330);
+        dialogStage.setWidth(470);
 
         LoanDetailFormController controller = loader.getController();
         controller.setDialogStage(dialogStage);
-        controller.setLoanDetail(loanDetail);
+        controller.setLoanDetail(null);
 
         dialogStage.showAndWait();
 

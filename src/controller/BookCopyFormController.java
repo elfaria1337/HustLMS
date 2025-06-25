@@ -34,13 +34,14 @@ public class BookCopyFormController {
 
     @FXML
     public void initialize() {
+        // Thiết lập các trạng thái cho ComboBox trạng thái
         stateComboBox.setItems(FXCollections.observableArrayList("Sẵn sàng", "Đang mượn", "Hỏng"));
         stateComboBox.setValue("Sẵn sàng");
 
         inventoryStatusLabel.setText("");
         titleStatusLabel.setText("");
 
-        // Thêm listener để kiểm tra tồn tại kho sách theo tên nhập
+        // Listener kiểm tra tồn tại kho sách khi nhập tên kho
         inventoryInput.textProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal == null || newVal.trim().isEmpty()) {
                 inventoryStatusLabel.setText("");
@@ -49,7 +50,7 @@ public class BookCopyFormController {
             }
             List<Inventory> found = inventoryRepo.searchByLocationName(newVal.trim());
             if (!found.isEmpty()) {
-                selectedInventory = found.get(0); // lấy đầu tiên khớp
+                selectedInventory = found.get(0); // lấy kho đầu tiên phù hợp
                 inventoryStatusLabel.setText("");
             } else {
                 selectedInventory = null;
@@ -57,7 +58,7 @@ public class BookCopyFormController {
             }
         });
 
-        // Thêm listener để kiểm tra tồn tại đầu sách theo tên nhập
+        // Listener kiểm tra tồn tại đầu sách khi nhập tên đầu sách
         titleInput.textProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal == null || newVal.trim().isEmpty()) {
                 titleStatusLabel.setText("");
@@ -66,7 +67,7 @@ public class BookCopyFormController {
             }
             List<BookTitle> found = bookTitleRepo.searchByTitleName(newVal.trim());
             if (!found.isEmpty()) {
-                selectedBookTitle = found.get(0);
+                selectedBookTitle = found.get(0); // lấy đầu sách đầu tiên phù hợp
                 titleStatusLabel.setText("");
             } else {
                 selectedBookTitle = null;
@@ -87,12 +88,41 @@ public class BookCopyFormController {
             selectedInventory = inventoryRepo.findById(bookCopy.getInventoryId());
             if (selectedInventory != null) {
                 inventoryInput.setText(selectedInventory.getLocationName());
+            } else {
+                inventoryInput.setText("");
             }
 
             selectedBookTitle = bookTitleRepo.findById(bookCopy.getTitleId());
             if (selectedBookTitle != null) {
                 titleInput.setText(selectedBookTitle.getTitleName());
+            } else {
+                titleInput.setText("");
             }
+        }
+    }
+
+    public void setSelectedBookTitle(BookTitle bookTitle) {
+        this.selectedBookTitle = bookTitle;
+        if (bookTitle != null) {
+            // Nếu bạn có một TextField hoặc Label hiển thị id hoặc tên đầu sách, gán tại đây
+            titleInput.setText(bookTitle.getTitleName());
+            // Nếu bạn muốn khóa trường nhập tên đầu sách khi đã chọn:
+            titleInput.setDisable(true);
+        } else {
+            titleInput.clear();
+            titleInput.setDisable(false);
+        }
+    }
+
+    public void setSelectedInventory(Inventory inventory) {
+        this.selectedInventory = inventory;
+        if (inventory != null) {
+            inventoryInput.setText(inventory.getLocationName());
+            inventoryInput.setDisable(true);  // khóa không cho sửa tên kho sách
+            inventoryStatusLabel.setText("");
+        } else {
+            inventoryInput.clear();
+            inventoryInput.setDisable(false); // mở lại nếu không có kho sách được chọn
         }
     }
 
@@ -106,25 +136,31 @@ public class BookCopyFormController {
 
     @FXML
     private void handleSave() {
-        String error = "";
+        StringBuilder errorBuilder = new StringBuilder();
 
         if (stateComboBox.getValue() == null || stateComboBox.getValue().trim().isEmpty()) {
-            error += "Trạng thái không được để trống!\n";
+            errorBuilder.append("Trạng thái không được để trống!\n");
         }
         if (selectedInventory == null) {
-            error += "Kho sách chưa hợp lệ hoặc không tồn tại!\n";
+            errorBuilder.append("Kho sách chưa hợp lệ hoặc không tồn tại!\n");
         }
         if (selectedBookTitle == null) {
-            error += "Đầu sách chưa hợp lệ hoặc không tồn tại!\n";
+            errorBuilder.append("Đầu sách chưa hợp lệ hoặc không tồn tại!\n");
         }
 
+        String error = errorBuilder.toString();
+
         if (!error.isEmpty()) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.initOwner(dialogStage);
-            alert.setTitle("Lỗi nhập liệu");
-            alert.setHeaderText("Thông tin bản sao sách không hợp lệ");
-            alert.setContentText(error);
-            alert.showAndWait();
+            // Sử dụng Platform.runLater với biến final
+            final String errMsg = error;
+            javafx.application.Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.initOwner(dialogStage);
+                alert.setTitle("Lỗi nhập liệu");
+                alert.setHeaderText("Thông tin bản sao sách không hợp lệ");
+                alert.setContentText(errMsg);
+                alert.showAndWait();
+            });
             return;
         }
 
