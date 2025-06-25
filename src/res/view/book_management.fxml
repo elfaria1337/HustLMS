@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Pagination?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TableColumn?>
@@ -26,17 +27,18 @@
                     <Button onAction="#handleEditBookTitle" text="Sửa đầu sách" />
                     <Button onAction="#handleDeleteBookTitle" text="Xóa đầu sách" />
                 </HBox>
-                    <TableView fx:id="bookTitleTable" prefHeight="300">
-                        <columns>
-                            <TableColumn fx:id="colTitleId" prefWidth="40" text="ID" />
-                            <TableColumn fx:id="colTitleName" prefWidth="200" text="Tên sách" />
-                            <TableColumn fx:id="colAuthor" prefWidth="140" text="Tác giả" />
-                            <TableColumn fx:id="colGenre" prefWidth="140" text="Thể loại" />
-                            <TableColumn fx:id="colPublisher" prefWidth="100" text="NXB" />
-                            <TableColumn fx:id="colPublishYear" prefWidth="60" text="Năm XB" />
-                            <TableColumn fx:id="colCopyCount" prefWidth="80" text="Số lượng" />
-                        </columns>
-                    </TableView>
+                <TableView fx:id="bookTitleTable" prefHeight="400">  <!-- Tăng chiều cao -->
+                    <columns>
+                        <TableColumn fx:id="colTitleId" prefWidth="40" text="ID" />
+                        <TableColumn fx:id="colTitleName" prefWidth="200" text="Tên sách" />
+                        <TableColumn fx:id="colAuthor" prefWidth="140" text="Tác giả" />
+                        <TableColumn fx:id="colGenre" prefWidth="140" text="Thể loại" />
+                        <TableColumn fx:id="colPublisher" prefWidth="100" text="NXB" />
+                        <TableColumn fx:id="colPublishYear" prefWidth="60" text="Năm XB" />
+                        <TableColumn fx:id="colCopyCount" prefWidth="80" text="Số lượng" />
+                    </columns>
+                </TableView>
+                <Pagination fx:id="pagination" pageCount="1" maxPageIndicatorCount="10" />
             </VBox>
         </Tab>
 
@@ -50,8 +52,8 @@
                 </HBox>
                 <TableView fx:id="inventoryTable" prefHeight="200">
                     <columns>
-                        <TableColumn fx:id="colInventoryId" prefWidth="156.80002439022064" text="ID" />
-                        <TableColumn fx:id="colLocationName" prefWidth="596.7999877929688" text="Tên vị trí" />
+                        <TableColumn fx:id="colInventoryId" prefWidth="156.8" text="ID" />
+                        <TableColumn fx:id="colLocationName" prefWidth="596.8" text="Tên vị trí" />
                     </columns>
                 </TableView>
             </VBox>
@@ -65,14 +67,15 @@
                     <Button onAction="#handleEditBookCopy" text="Sửa bản sao" />
                     <Button onAction="#handleDeleteBookCopy" text="Xóa bản sao" />
                 </HBox>
-                <TableView fx:id="bookCopyTable" prefHeight="300">
+                <TableView fx:id="bookCopyTable" prefHeight="400"> <!-- Tăng chiều cao -->
                     <columns>
-                        <TableColumn fx:id="colCopyId" prefWidth="67.99999845027924" text="ID" />
-                        <TableColumn fx:id="colCopyState" prefWidth="250.39997100830078" text="Trạng thái" />
-                        <TableColumn fx:id="colCopyInventory" prefWidth="254.39999389648438" text="Kho sách" />
-                        <TableColumn fx:id="colCopyTitle" prefWidth="181.5999755859375" text="Đầu sách" />
+                        <TableColumn fx:id="colCopyId" prefWidth="68" text="ID" />
+                        <TableColumn fx:id="colCopyState" prefWidth="250.4" text="Trạng thái" />
+                        <TableColumn fx:id="colCopyInventory" prefWidth="254.4" text="Kho sách" />
+                        <TableColumn fx:id="colCopyTitle" prefWidth="181.6" text="Đầu sách" />
                     </columns>
                 </TableView>
+                <Pagination fx:id="bookCopyPagination" pageCount="1" maxPageIndicatorCount="10" />
             </VBox>
         </Tab>
     </TabPane>

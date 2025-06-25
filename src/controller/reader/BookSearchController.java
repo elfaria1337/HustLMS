@@ -11,6 +11,7 @@ import model.BookTitle;
 import model.Reservation;
 import repo.BookCopyRepository;
 import repo.BookTitleRepository;
+import repo.LoanRepository;
 import repo.ReservationRepository;
 
 import java.time.LocalDate;
@@ -35,6 +36,7 @@ public class BookSearchController {
     private BookTitleRepository bookTitleRepo = new BookTitleRepository();
     private BookCopyRepository bookCopyRepo = new BookCopyRepository();
     private ReservationRepository reservationRepo = new ReservationRepository();
+    private LoanRepository loanRepository = new LoanRepository();
 
     private ObservableList<BookTitle> bookTitleList = FXCollections.observableArrayList();
     private ObservableList<BookCopy> bookCopyList = FXCollections.observableArrayList();
@@ -125,6 +127,23 @@ public class BookSearchController {
         } else {
             showError("Đặt trước thất bại, vui lòng thử lại.");
         }
+    }
+
+    @FXML
+    private void handleSuggestBooks() {
+        List<String> favoriteGenres = loanRepository.findFavoriteGenresByReaderIdWithinMonths(currentReaderId, 3);
+        if (favoriteGenres == null || favoriteGenres.isEmpty()) {
+            showInfo("Không có dữ liệu lịch sử mượn để gợi ý sách.");
+            return;
+        }
+
+        List<BookTitle> suggestedBooks = bookTitleRepo.findByGenres(favoriteGenres);
+        if (suggestedBooks.isEmpty()) {
+            showInfo("Không tìm thấy sách phù hợp với sở thích của bạn.");
+            return;
+        }
+
+        bookTitleList.setAll(suggestedBooks);
     }
 
     private void showInfo(String message) {

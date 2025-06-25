@@ -8,10 +8,19 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import model.*;
-import repo.*;
+import model.Account;
+import model.Loan;
+import model.Fine;
+import model.Invoice;
+import model.Reader;
+import repo.AccountRepository;
+import repo.FineRepository;
+import repo.InvoiceRepository;
+import repo.LoanRepository;
+import repo.ReaderRepository;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -31,6 +40,7 @@ public class ReaderController {
     @FXML private TableColumn<Reader, String> colPhone;
     @FXML private TableColumn<Reader, String> colEmail;
     @FXML private TableColumn<Reader, String> colStatus;
+    @FXML private Pagination pagination;
 
     // Lịch sử
     @FXML private TableView<Loan> loanHistoryTable;
@@ -62,9 +72,13 @@ public class ReaderController {
     private DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private Map<Integer, String> readerStatusMap = new HashMap<>();
 
+    private static final int ROWS_PER_PAGE = 15;
+    private int totalReaders = 0;
+    private String currentSearchKeyword = "";
+
     @FXML
     public void initialize() {
-        // Độc giả
+        // Cấu hình các cột TableView
         colId.setCellValueFactory(data -> new ReadOnlyObjectWrapper<>(data.getValue().getReaderId()));
         colFullName.setCellValueFactory(data -> new ReadOnlyObjectWrapper<>(data.getValue().getFullName()));
         colBirthDate.setCellValueFactory(data -> new ReadOnlyObjectWrapper<>(data.getValue().getBirthDate().format(dateFormatter)));
@@ -72,11 +86,11 @@ public class ReaderController {
         colPhone.setCellValueFactory(data -> new ReadOnlyObjectWrapper<>(data.getValue().getPhone()));
         colEmail.setCellValueFactory(data -> new ReadOnlyObjectWrapper<>(data.getValue().getEmail()));
         colStatus.setCellValueFactory(data -> {
-            Reader reader = data.getValue();
-            String status = readerStatusMap.get(reader.getReaderId());
+            Reader r = data.getValue();
+            String status = readerStatusMap.get(r.getReaderId());
             return new ReadOnlyObjectWrapper<>(status != null ? status : "");
         });
-        
+
         // Lịch sử mượn
         colLoanId.setCellValueFactory(data -> new ReadOnlyObjectWrapper<>(data.getValue().getLoanId()));
         colLoanDate.setCellValueFactory(data -> new ReadOnlyObjectWrapper<>(data.getValue().getLoanDate().format(dateFormatter)));
@@ -92,18 +106,17 @@ public class ReaderController {
         colInvoiceDate.setCellValueFactory(data -> new ReadOnlyObjectWrapper<>(data.getValue().getInvoiceDate().format(dateFormatter)));
         colInvoiceAmount.setCellValueFactory(data -> new ReadOnlyObjectWrapper<>(data.getValue().getAmount()));
 
-        // Tải danh sách độc giả ban đầu
-        loadReaders();
+        // Thiết lập Pagination
+        pagination.setPageFactory(this::createPage);
 
-        // Tìm kiếm theo tên hoặc điện thoại
+        // Tải tổng số độc giả và cập nhật phân trang
+        updateTotalReadersCountAndPagination();
+
+        // Tìm kiếm theo tên hoặc điện thoại, cập nhật lại phân trang
         searchField.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal == null || newVal.trim().isEmpty()) {
-                loadReaders();
-            } else {
-                List<Reader> filtered = readerRepo.searchByNameOrPhone(newVal.trim());
-                readerList.setAll(filtered);
-                readerTable.setItems(readerList);
-            }
+            currentSearchKeyword = (newVal != null) ? newVal.trim() : "";
+            updateTotalReadersCountAndPagination();
+            pagination.setCurrentPageIndex(0);
         });
 
         // Khi chọn độc giả, load lịch sử tương ứng
@@ -121,17 +134,42 @@ public class ReaderController {
         });
     }
 
-    private void loadReaders() {
-        List<Reader> readers = readerRepo.findAll();
-        readerList.setAll(readers);
+    // Tạo trang cho phân trang
+    private VBox createPage(int pageIndex) {
+        int offset = pageIndex * ROWS_PER_PAGE;
+        List<Reader> pageData;
+        if (currentSearchKeyword.isEmpty()) {
+            pageData = readerRepo.findPage(offset, ROWS_PER_PAGE);
+        } else {
+            pageData = readerRepo.searchPageByNameOrPhone(currentSearchKeyword, offset, ROWS_PER_PAGE);
+        }
+        readerList.setAll(pageData);
+        readerTable.setItems(readerList);
 
+        // Cập nhật trạng thái cho reader
+        updateReaderStatusMap(pageData);
+
+        return new VBox(readerTable);
+    }
+
+    private void updateReaderStatusMap(List<Reader> readers) {
         readerStatusMap.clear();
         for (Reader r : readers) {
             Account acc = accountRepo.findByReaderId(r.getReaderId());
             readerStatusMap.put(r.getReaderId(), acc != null ? acc.getStatus() : "Chưa có tài khoản");
         }
+        readerTable.refresh();
+    }
 
-        readerTable.setItems(readerList);
+    private void updateTotalReadersCountAndPagination() {
+        if (currentSearchKeyword.isEmpty()) {
+            totalReaders = readerRepo.countAll();
+        } else {
+            totalReaders = readerRepo.countSearchByNameOrPhone(currentSearchKeyword);
+        }
+        int pageCount = (totalReaders + ROWS_PER_PAGE - 1) / ROWS_PER_PAGE;
+        if (pageCount == 0) pageCount = 1;
+        pagination.setPageCount(pageCount);
     }
 
     private void loadLoanHistory(int readerId) {
@@ -166,7 +204,7 @@ public class ReaderController {
             dialogStage.setScene(scene);
             dialogStage.setWidth(350);
 
-            ReaderFormController controller = loader.getController();
+            controller.ReaderFormController controller = loader.getController();
             controller.setDialogStage(dialogStage);
             controller.setReader(new Reader()); // tạo mới
             controller.setAccount(null);
@@ -180,7 +218,8 @@ public class ReaderController {
                 if (readerRepo.insert(newReader)) {
                     newAccount.setReaderId(newReader.getReaderId());
                     if (accountRepo.insert(newAccount)) {
-                        loadReaders();
+                        updateTotalReadersCountAndPagination();
+                        pagination.setCurrentPageIndex(0);
                     } else {
                         showAlert("Lưu tài khoản thất bại.");
                     }
@@ -212,7 +251,7 @@ public class ReaderController {
             dialogStage.setScene(scene);
             dialogStage.setWidth(350);
 
-            ReaderFormController controller = loader.getController();
+            controller.ReaderFormController controller = loader.getController();
             controller.setDialogStage(dialogStage);
             controller.setReader(selected);
 
@@ -236,7 +275,8 @@ public class ReaderController {
                 }
 
                 if (successReader && successAccount) {
-                    loadReaders();
+                    updateTotalReadersCountAndPagination();
+                    pagination.setCurrentPageIndex(0);
                 } else {
                     showAlert("Cập nhật thất bại.");
                 }

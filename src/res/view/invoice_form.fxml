@@ -24,9 +24,9 @@
         <Label text="Ngày thanh toán:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
         <DatePicker fx:id="paymentDatePicker" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-        <Label text="Mã độc giả:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-        <TextField fx:id="readerIdField" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
-        <Label fx:id="readerIdErrorLabel" text="Mã độc giả không tồn tại" GridPane.rowIndex="4" GridPane.columnIndex="1" style="-fx-text-fill: red;" visible="false"/>
+        <Label text="Số điện thoại độc giả:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <TextField fx:id="phoneField" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+        <Label fx:id="phoneErrorLabel" text="Số điện thoại không tồn tại" GridPane.rowIndex="4" GridPane.columnIndex="1" style="-fx-text-fill: red;" visible="false"/>
 
         <Label text="Mã phạt (nếu có):" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
         <TextField fx:id="fineIdField" GridPane.rowIndex="5" GridPane.columnIndex="1"/>

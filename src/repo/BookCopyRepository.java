@@ -18,8 +18,7 @@ public class BookCopyRepository {
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
-                BookCopy copy = mapResultSetToBookCopy(rs);
-                list.add(copy);
+                list.add(mapResultSetToBookCopy(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -27,10 +26,46 @@ public class BookCopyRepository {
         return list;
     }
 
+    public List<BookCopy> findPageAll(int offset, int limit) {
+        List<BookCopy> copies = new ArrayList<>();
+        String sql = "SELECT bc.*, i.location_name " +
+                    "FROM book_copy bc " +
+                    "LEFT JOIN inventory i ON bc.inventory_id = i.inventory_id " +
+                    "ORDER BY bc.copy_id LIMIT ? OFFSET ?";
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, limit);
+            stmt.setInt(2, offset);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    copies.add(mapResultSetToBookCopy(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return copies;
+    }
+
+    public int countAll() {
+        String sql = "SELECT COUNT(*) FROM book_copy";
+        try (Connection conn = DBConnection.getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     public BookCopy findById(int id) {
-        String sql = "SELECT bc.*, i.location_name" + " FROM book_copy bc "
-            + "JOIN inventory i ON bc.inventory_id = i.inventory_id "
-            + "WHERE bc.copy_id = ?";
+        String sql = "SELECT bc.*, i.location_name " +
+                     "FROM book_copy bc " +
+                     "JOIN inventory i ON bc.inventory_id = i.inventory_id " +
+                     "WHERE bc.copy_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
@@ -52,7 +87,7 @@ public class BookCopyRepository {
                     "JOIN inventory i ON bc.inventory_id = i.inventory_id " +
                     "WHERE bc.title_id = ?";
         try (Connection conn = DBConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, titleId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -72,11 +107,12 @@ public class BookCopyRepository {
                     "WHERE bt.title_name ILIKE ? AND bc.state = 'Sẵn sàng' " +
                     "ORDER BY bc.copy_id LIMIT 1";
         try (Connection conn = DBConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, "%" + titleName + "%");
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getInt("copy_id");
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("copy_id");
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -84,10 +120,33 @@ public class BookCopyRepository {
         return null;
     }
 
+    public List<BookCopy> findPageByTitleId(int titleId, int offset, int limit) {
+        List<BookCopy> copies = new ArrayList<>();
+        String sql = "SELECT bc.*, i.location_name " +
+                     "FROM book_copy bc " +
+                     "JOIN inventory i ON bc.inventory_id = i.inventory_id " +
+                     "WHERE bc.title_id = ? " +
+                     "ORDER BY bc.copy_id LIMIT ? OFFSET ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, titleId);
+            stmt.setInt(2, limit);
+            stmt.setInt(3, offset);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    copies.add(mapResultSetToBookCopy(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return copies;
+    }
+
     public int countByTitleId(int titleId) {
         String sql = "SELECT COUNT(*) FROM book_copy WHERE title_id = ?";
         try (Connection conn = DBConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, titleId);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -157,7 +216,8 @@ public class BookCopyRepository {
         copy.setState(rs.getString("state"));
         copy.setInventoryId(rs.getInt("inventory_id"));
         copy.setTitleId(rs.getInt("title_id"));
-        copy.setLocationName(rs.getString("location_name")); // lấy tên kho từ bảng inventory
+        // Lấy tên kho từ bảng inventory (câu SQL đã JOIN)
+        copy.setLocationName(rs.getString("location_name"));
         return copy;
     }
 }

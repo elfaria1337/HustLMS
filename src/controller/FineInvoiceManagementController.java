@@ -99,7 +99,7 @@ public class FineInvoiceManagementController {
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(fineTable.getScene().getWindow());
             dialogStage.setScene(new Scene(page));
-            dialogStage.setWidth(300);
+            dialogStage.setWidth(370);
 
             FineFormController controller = loader.getController();
             controller.setDialogStage(dialogStage);
@@ -130,14 +130,14 @@ public class FineInvoiceManagementController {
         }
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/res/view/fine_form.fxml"));
-            Parent page = loader.load();
+            Parent page = loader.load();    
 
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Sửa phạt");
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(fineTable.getScene().getWindow());
             dialogStage.setScene(new Scene(page));
-            dialogStage.setWidth(300);
+            dialogStage.setWidth(370);
 
             FineFormController controller = loader.getController();
             controller.setDialogStage(dialogStage);

@@ -4,6 +4,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 import model.Invoice;
+import model.Reader;
 import repo.FineRepository;
 import repo.ReaderRepository;
 
@@ -14,10 +15,10 @@ public class InvoiceFormController {
     @FXML private TextField amountField;
     @FXML private TextField paymentMethodField;
     @FXML private DatePicker paymentDatePicker;
-    @FXML private TextField readerIdField;
+    @FXML private TextField phoneField;
     @FXML private TextField fineIdField;
 
-    @FXML private Label readerIdErrorLabel;
+    @FXML private Label phoneErrorLabel;
     @FXML private Label fineIdErrorLabel;
 
     private Stage dialogStage;
@@ -29,26 +30,8 @@ public class InvoiceFormController {
 
     @FXML
     public void initialize() {
-        readerIdErrorLabel.setVisible(false);
+        phoneErrorLabel.setVisible(false);
         fineIdErrorLabel.setVisible(false);
-
-        readerIdField.setText("");
-        fineIdField.setText("");
-
-        readerIdField.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal == null || newVal.trim().isEmpty()) {
-                readerIdErrorLabel.setVisible(false);
-                return;
-            }
-            try {
-                int id = Integer.parseInt(newVal.trim());
-                boolean exists = readerRepo.findById(id) != null;
-                readerIdErrorLabel.setVisible(!exists);
-            } catch (NumberFormatException e) {
-                readerIdErrorLabel.setText("Mã độc giả phải là số nguyên");
-                readerIdErrorLabel.setVisible(true);
-            }
-        });
 
         fineIdField.textProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal == null || newVal.trim().isEmpty()) {
@@ -64,8 +47,16 @@ public class InvoiceFormController {
                 fineIdErrorLabel.setVisible(true);
             }
         });
+        
+        phoneField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal == null || newVal.trim().isEmpty()) {
+                phoneErrorLabel.setVisible(false);
+                return;
+            }
+            Reader reader = readerRepo.findByPhone(newVal.trim());
+            phoneErrorLabel.setVisible(reader == null);
+        });
 
-        // Optional: disable typing on DatePicker editor to prevent invalid input
         paymentDatePicker.getEditor().setEditable(false);
     }
 
@@ -79,9 +70,15 @@ public class InvoiceFormController {
             amountField.setText(invoice.getAmount() != null ? invoice.getAmount().toString() : "");
             paymentMethodField.setText(invoice.getPaymentMethod());
             paymentDatePicker.setValue(invoice.getPaymentDate());
-            readerIdField.setText(invoice.getReaderId() != 0 ? String.valueOf(invoice.getReaderId()) : "");
             fineIdField.setText(invoice.getFineId() != null ? String.valueOf(invoice.getFineId()) : "");
-            readerIdErrorLabel.setVisible(false);
+            // Tìm số điện thoại của độc giả để hiện lên trường phoneField (nếu cần)
+            if (invoice.getReaderId() != 0) {
+                Reader reader = readerRepo.findById(invoice.getReaderId());
+                if (reader != null) {
+                    phoneField.setText(reader.getPhone());
+                }
+            }
+            phoneErrorLabel.setVisible(false);
             fineIdErrorLabel.setVisible(false);
         }
     }
@@ -101,10 +98,18 @@ public class InvoiceFormController {
                 invoice = new Invoice();
             }
 
+            // Tìm readerId theo số điện thoại
+            Reader reader = readerRepo.findByPhone(phoneField.getText().trim());
+            if (reader == null) {
+                // Nên kiểm tra trước khi save để đảm bảo số điện thoại hợp lệ
+                showAlert("Số điện thoại độc giả không tồn tại.");
+                return;
+            }
+
             invoice.setAmount(new BigDecimal(amountField.getText().trim()));
             invoice.setPaymentMethod(paymentMethodField.getText().trim());
             invoice.setPaymentDate(paymentDatePicker.getValue());
-            invoice.setReaderId(Integer.parseInt(readerIdField.getText().trim()));
+            invoice.setReaderId(reader.getReaderId()); // dùng readerId tìm được
 
             String fineIdText = fineIdField.getText().trim();
             if (fineIdText.isEmpty()) {
@@ -144,16 +149,12 @@ public class InvoiceFormController {
             errorMessage.append("Ngày thanh toán không được để trống!\n");
         }
 
-        if (readerIdField.getText() == null || readerIdField.getText().trim().isEmpty()) {
-            errorMessage.append("Mã độc giả không được để trống!\n");
+        if (phoneField.getText() == null || phoneField.getText().trim().isEmpty()) {
+            errorMessage.append("Số điện thoại độc giả không được để trống!\n");
         } else {
-            try {
-                int id = Integer.parseInt(readerIdField.getText().trim());
-                if (readerRepo.findById(id) == null) {
-                    errorMessage.append("Mã độc giả không tồn tại!\n");
-                }
-            } catch (NumberFormatException e) {
-                errorMessage.append("Mã độc giả phải là số nguyên!\n");
+            Reader reader = readerRepo.findByPhone(phoneField.getText().trim());
+            if (reader == null) {
+                errorMessage.append("Số điện thoại độc giả không tồn tại!\n");
             }
         }
 
@@ -180,5 +181,14 @@ public class InvoiceFormController {
         }
 
         return true;
+    }
+
+    private void showAlert(String content) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.initOwner(dialogStage);
+        alert.setTitle("Lỗi");
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 }

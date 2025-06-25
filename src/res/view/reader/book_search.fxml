@@ -28,7 +28,8 @@
     </TableView>
 
     <HBox alignment="CENTER_RIGHT" spacing="10">
-    <Button text="Đặt trước đầu sách" onAction="#handleReserveBook"/>
+        <Button text="Đặt trước đầu sách" onAction="#handleReserveBook"/>
+        <Button text="Gợi ý sách" onAction="#handleSuggestBooks"/>
     </HBox>
 
     <!-- Bảng chi tiết bản sao sách của đầu sách được chọn -->

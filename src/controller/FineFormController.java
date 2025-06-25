@@ -4,6 +4,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 import model.Fine;
+import model.Reader;
 import repo.ReaderRepository;
 
 import java.math.BigDecimal;
@@ -13,9 +14,9 @@ public class FineFormController {
     @FXML private TextField reasonField;
     @FXML private TextField amountField;
     @FXML private DatePicker issueDatePicker;
-    @FXML private TextField readerIdField;
+    @FXML private TextField phoneField;
 
-    @FXML private Label readerIdErrorLabel;
+    @FXML private Label phoneErrorLabel;
 
     private Stage dialogStage;
     private Fine fine;
@@ -25,27 +26,21 @@ public class FineFormController {
 
     @FXML
     public void initialize() {
-        readerIdErrorLabel.setVisible(false);
-        readerIdField.setText("");
+        phoneErrorLabel.setVisible(false);
+        phoneField.setText("");
 
-        // Listener kiểm tra readerId nhập vào
-        readerIdField.textProperty().addListener((obs, oldVal, newVal) -> {
+        // Listener kiểm tra phone nhập vào
+        phoneField.textProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal == null || newVal.trim().isEmpty()) {
-                readerIdErrorLabel.setVisible(false);
+                phoneErrorLabel.setVisible(false);
                 return;
             }
-            try {
-                int id = Integer.parseInt(newVal.trim());
-                boolean exists = readerRepo.findById(id) != null;
-                if (!exists) {
-                    readerIdErrorLabel.setText("Mã độc giả không tồn tại");
-                    readerIdErrorLabel.setVisible(true);
-                } else {
-                    readerIdErrorLabel.setVisible(false);
-                }
-            } catch (NumberFormatException e) {
-                readerIdErrorLabel.setText("Mã độc giả phải là số nguyên");
-                readerIdErrorLabel.setVisible(true);
+            boolean exists = readerRepo.findByPhone(newVal.trim()) != null;
+            if (!exists) {
+                phoneErrorLabel.setText("Số điện thoại không tồn tại");
+                phoneErrorLabel.setVisible(true);
+            } else {
+                phoneErrorLabel.setVisible(false);
             }
         });
 
@@ -74,7 +69,14 @@ public class FineFormController {
             } else {
                 issueDatePicker.setValue(null);
             }
-            readerIdField.setText(fine.getReaderId() != 0 ? String.valueOf(fine.getReaderId()) : "");
+            // Lấy số điện thoại của độc giả theo readerId
+            Reader reader = readerRepo.findById(fine.getReaderId());
+            if (reader != null) {
+                phoneField.setText(reader.getPhone());
+            } else {
+                phoneField.setText("");
+            }
+            phoneErrorLabel.setVisible(false);
         }
     }
 
@@ -95,7 +97,15 @@ public class FineFormController {
             fine.setReason(reasonField.getText().trim());
             fine.setAmount(new BigDecimal(amountField.getText().trim()));
             fine.setIssueDate(issueDatePicker.getValue());
-            fine.setReaderId(Integer.parseInt(readerIdField.getText().trim()));
+
+            // Lấy readerId từ số điện thoại
+            String phone = phoneField.getText().trim();
+            Reader reader = readerRepo.findByPhone(phone);
+            if (reader != null) {
+                fine.setReaderId(reader.getReaderId());
+            } else {
+                fine.setReaderId(0); // hoặc xử lý lỗi
+            }
 
             saveClicked = true;
             dialogStage.close();
@@ -125,16 +135,12 @@ public class FineFormController {
         if (issueDatePicker.getValue() == null) {
             errorMessage.append("Ngày phạt không được để trống!\n");
         }
-        if (readerIdField.getText() == null || readerIdField.getText().trim().isEmpty()) {
-            errorMessage.append("Mã độc giả không được để trống!\n");
+        if (phoneField.getText() == null || phoneField.getText().trim().isEmpty()) {
+            errorMessage.append("Số điện thoại không được để trống!\n");
         } else {
-            try {
-                int id = Integer.parseInt(readerIdField.getText().trim());
-                if (readerRepo.findById(id) == null) {
-                    errorMessage.append("Mã độc giả không tồn tại!\n");
-                }
-            } catch (NumberFormatException e) {
-                errorMessage.append("Mã độc giả phải là số nguyên!\n");
+            boolean exists = readerRepo.findByPhone(phoneField.getText().trim()) != null;
+            if (!exists) {
+                errorMessage.append("Số điện thoại không tồn tại!\n");
             }
         }
 

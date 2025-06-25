@@ -13,7 +13,7 @@
 
     <Label text="Thông tin Phạt" style="-fx-font-weight: bold; -fx-font-size: 16px;"/>
 
-<GridPane hgap="10" vgap="10">
+    <GridPane hgap="10" vgap="10">
 
         <Label text="Lý do:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
         <TextField fx:id="reasonField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
@@ -24,10 +24,9 @@
         <Label text="Ngày phạt:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
         <DatePicker fx:id="issueDatePicker" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-        <Label text="Mã độc giả:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-        <TextField fx:id="readerIdField" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
-
-        <Label fx:id="readerIdErrorLabel" text="Mã độc giả không tồn tại" GridPane.rowIndex="4" GridPane.columnIndex="1" style="-fx-text-fill: red;" visible="false"/>
+        <Label text="Số điện thoại độc giả:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <TextField fx:id="phoneField" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+        <Label fx:id="phoneErrorLabel" text="Số điện thoại không tồn tại" GridPane.rowIndex="4" GridPane.columnIndex="1" style="-fx-text-fill: red;" visible="false"/>
 
     </GridPane>
 

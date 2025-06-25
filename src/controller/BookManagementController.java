@@ -1,6 +1,7 @@
 package controller;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -8,6 +9,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.BookCopy;
@@ -25,7 +27,9 @@ import java.util.Optional;
 
 public class BookManagementController {
 
-    // BookTitle
+    // ==== UI Controls ====
+
+    // BookTitle Table & Columns
     @FXML private TableView<BookTitle> bookTitleTable;
     @FXML private TableColumn<BookTitle, Integer> colTitleId;
     @FXML private TableColumn<BookTitle, String> colTitleName;
@@ -33,121 +37,172 @@ public class BookManagementController {
     @FXML private TableColumn<BookTitle, String> colGenre;
     @FXML private TableColumn<BookTitle, String> colPublisher;
     @FXML private TableColumn<BookTitle, Integer> colPublishYear;
-    @FXML private TableColumn<BookTitle, Integer> colCopyCount;  // cột số lượng bản sao
+    @FXML private TableColumn<BookTitle, Integer> colCopyCount;
     @FXML private TextField searchField;
+    @FXML private Pagination pagination;
 
-    // Inventory
+    // Inventory Table & Columns
     @FXML private TableView<Inventory> inventoryTable;
     @FXML private TableColumn<Inventory, Integer> colInventoryId;
     @FXML private TableColumn<Inventory, String> colLocationName;
 
-    // BookCopy
+    // BookCopy Table & Columns
     @FXML private TableView<BookCopy> bookCopyTable;
     @FXML private TableColumn<BookCopy, Integer> colCopyId;
     @FXML private TableColumn<BookCopy, String> colCopyState;
     @FXML private TableColumn<BookCopy, String> colCopyInventory;
     @FXML private TableColumn<BookCopy, String> colCopyTitle;
+    @FXML private Pagination bookCopyPagination;
 
-    // Repositories
-    private BookTitleRepository bookTitleRepo = new BookTitleRepository();
-    private InventoryRepository inventoryRepo = new InventoryRepository();
-    private BookCopyRepository bookCopyRepo = new BookCopyRepository();
-    private BookCopySummaryRepository bookCopySummaryRepo = new BookCopySummaryRepository();
+    // ==== Repositories ====
+    private final BookTitleRepository bookTitleRepo = new BookTitleRepository();
+    private final InventoryRepository inventoryRepo = new InventoryRepository();
+    private final BookCopyRepository bookCopyRepo = new BookCopyRepository();
+    private final BookCopySummaryRepository bookCopySummaryRepo = new BookCopySummaryRepository();
 
-    // ObservableLists
-    private ObservableList<Inventory> inventoryList = FXCollections.observableArrayList();
-    private ObservableList<BookCopy> bookCopyList = FXCollections.observableArrayList();
-
-    // Cache số lượng bản sao (titleId -> count)
+    // Cache copy count per title
     private Map<Integer, Integer> bookCopyCountMap;
+
+    // Pagination constants
+    private static final int ROWS_PER_PAGE = 15;
+
+    // Pagination state for BookTitle
+    private int totalBookTitles = 0;
+    private String currentSearchKeyword = "";
+
+    // Pagination state for BookCopy (to manage total pages)
+    private int totalBookCopies = 0;
+
+    // Observable lists for tables
+    private final ObservableList<Inventory> inventoryList = FXCollections.observableArrayList();
+    private final ObservableList<BookCopy> bookCopyList = FXCollections.observableArrayList();
 
     @FXML
     public void initialize() {
         // Setup BookTitle columns
-        colTitleId.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getTitleId()));
-        colTitleName.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getTitleName()));
-        colAuthor.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getAuthor()));
-        colGenre.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getGenre()));
-        colPublisher.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getPublisher()));
-        colPublishYear.setCellValueFactory(cellData -> {
-            Integer year = cellData.getValue().getPublishYear();
+        colTitleId.setCellValueFactory(cd -> new ReadOnlyObjectWrapper<>(cd.getValue().getTitleId()));
+        colTitleName.setCellValueFactory(cd -> new SimpleStringProperty(cd.getValue().getTitleName()));
+        colAuthor.setCellValueFactory(cd -> new SimpleStringProperty(cd.getValue().getAuthor()));
+        colGenre.setCellValueFactory(cd -> new SimpleStringProperty(cd.getValue().getGenre()));
+        colPublisher.setCellValueFactory(cd -> new SimpleStringProperty(cd.getValue().getPublisher()));
+        colPublishYear.setCellValueFactory(cd -> {
+            Integer year = cd.getValue().getPublishYear();
             return new ReadOnlyObjectWrapper<>(year != null ? year : 0);
         });
-
-        // Cell factory cột số lượng bản sao dùng map cache
-        colCopyCount.setCellValueFactory(cellData -> {
-            int titleId = cellData.getValue().getTitleId();
+        colCopyCount.setCellValueFactory(cd -> {
+            int titleId = cd.getValue().getTitleId();
             int count = bookCopyCountMap != null ? bookCopyCountMap.getOrDefault(titleId, 0) : 0;
             return new ReadOnlyObjectWrapper<>(count);
         });
 
-        // Setup cột widths (tuỳ chỉnh cho phù hợp)
-        colTitleId.setPrefWidth(40);
-        colTitleName.setPrefWidth(200);
-        colAuthor.setPrefWidth(140);
-        colGenre.setPrefWidth(140);
-        colPublisher.setPrefWidth(100);
-        colPublishYear.setPrefWidth(60);
-        colCopyCount.setPrefWidth(80);
-
         // Setup Inventory columns
-        colInventoryId.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getInventoryId()));
-        colLocationName.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getLocationName()));
+        colInventoryId.setCellValueFactory(cd -> new ReadOnlyObjectWrapper<>(cd.getValue().getInventoryId()));
+        colLocationName.setCellValueFactory(cd -> new SimpleStringProperty(cd.getValue().getLocationName()));
 
         // Setup BookCopy columns
-        colCopyId.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getCopyId()));
-        colCopyState.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getState()));
-
-        // Inventory name và BookTitle name cho BookCopy bảng
-        colCopyInventory.setCellValueFactory(cellData -> {
-            int invId = cellData.getValue().getInventoryId();
-            Inventory inv = inventoryRepo.findById(invId);
-            String name = (inv != null) ? inv.getLocationName() : "N/A";
-            return new javafx.beans.property.SimpleStringProperty(name);
+        colCopyId.setCellValueFactory(cd -> new ReadOnlyObjectWrapper<>(cd.getValue().getCopyId()));
+        colCopyState.setCellValueFactory(cd -> new SimpleStringProperty(cd.getValue().getState()));
+        colCopyInventory.setCellValueFactory(cd -> {
+            Inventory inv = inventoryRepo.findById(cd.getValue().getInventoryId());
+            return new SimpleStringProperty(inv != null ? inv.getLocationName() : "N/A");
+        });
+        colCopyTitle.setCellValueFactory(cd -> {
+            BookTitle book = bookTitleRepo.findById(cd.getValue().getTitleId());
+            return new SimpleStringProperty(book != null ? book.getTitleName() : "N/A");
         });
 
-        colCopyTitle.setCellValueFactory(cellData -> {
-            int titleId = cellData.getValue().getTitleId();
-            BookTitle book = bookTitleRepo.findById(titleId);
-            String name = (book != null) ? book.getTitleName() : "N/A";
-            return new javafx.beans.property.SimpleStringProperty(name);
+        // Setup Pagination factories
+        pagination.setPageFactory(this::createBookTitlePage);
+        bookCopyPagination.setPageFactory(this::createBookCopyPage);
+
+        // Search field listener to update pagination on keyword change
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            currentSearchKeyword = (newVal != null) ? newVal.trim() : "";
+            updateTotalBookTitlesCountAndPagination();
+            pagination.setCurrentPageIndex(0);
         });
 
-        // Tìm kiếm đầu sách theo tên hoặc tác giả
-        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue == null || newValue.trim().isEmpty()) {
-                loadBookTitles();
-            } else {
-                List<BookTitle> filtered = bookTitleRepo.searchByTitleOrAuthor(newValue.trim());
-                ObservableList<BookTitle> filteredList = FXCollections.observableArrayList(filtered);
-                bookTitleTable.setItems(filteredList);
-            }
-        });
+        // We no longer filter book copies by selected title, so we remove listener on bookTitleTable selection
 
-        loadData();
+        // Load initial data
+        updateTotalBookTitlesCountAndPagination();
+        loadInventories();
+
+        // Initialize book copy pagination by loading first page
+        updateTotalBookCopiesCountAndPagination();
+        bookCopyPagination.setCurrentPageIndex(0);
     }
 
-    private void loadBookTitles() {
-        List<BookTitle> bookTitles = bookTitleRepo.findAll();
-        bookCopyCountMap = bookCopySummaryRepo.getAllCopyCounts(); // Tải cache số lượng bản sao
+    // BookTitle pagination page creation
+    private VBox createBookTitlePage(int pageIndex) {
+        int offset = pageIndex * ROWS_PER_PAGE;
+        List<BookTitle> pageData;
+        if (currentSearchKeyword.isEmpty()) {
+            pageData = bookTitleRepo.findPage(offset, ROWS_PER_PAGE);
+            totalBookTitles = bookTitleRepo.countAll();
+        } else {
+            pageData = bookTitleRepo.searchPageByTitleOrAuthor(currentSearchKeyword, offset, ROWS_PER_PAGE);
+            totalBookTitles = bookTitleRepo.countSearchByTitleOrAuthor(currentSearchKeyword);
+        }
 
-        ObservableList<BookTitle> list = FXCollections.observableArrayList(bookTitles);
+        bookCopyCountMap = bookCopySummaryRepo.getAllCopyCounts();
+
+        ObservableList<BookTitle> list = FXCollections.observableArrayList(pageData);
         bookTitleTable.setItems(list);
+
+        int pageCount = (totalBookTitles + ROWS_PER_PAGE - 1) / ROWS_PER_PAGE;
+        pagination.setPageCount(pageCount == 0 ? 1 : pageCount);
+
+        return new VBox(bookTitleTable);
     }
 
-    private void loadData() {
-        loadBookTitles();
+    private void updateTotalBookTitlesCountAndPagination() {
+        if (currentSearchKeyword.isEmpty()) {
+            totalBookTitles = bookTitleRepo.countAll();
+        } else {
+            totalBookTitles = bookTitleRepo.countSearchByTitleOrAuthor(currentSearchKeyword);
+        }
+        int pageCount = (totalBookTitles + ROWS_PER_PAGE - 1) / ROWS_PER_PAGE;
+        pagination.setPageCount(pageCount == 0 ? 1 : pageCount);
+    }
 
+    // BookCopy pagination page creation, load ALL copies paginated, no filter
+    private VBox createBookCopyPage(int pageIndex) {
+        int offset = pageIndex * ROWS_PER_PAGE;
+        List<BookCopy> pageData = bookCopyRepo.findPageAll(offset, ROWS_PER_PAGE);
+        bookCopyList.setAll(pageData);
+        bookCopyTable.setItems(bookCopyList);
+        bookCopyTable.refresh();
+
+        int totalCopies = bookCopyRepo.countAll();
+        int pageCount = (totalCopies + ROWS_PER_PAGE - 1) / ROWS_PER_PAGE;
+        bookCopyPagination.setPageCount(pageCount == 0 ? 1 : pageCount);
+
+        return new VBox(bookCopyTable);
+    }
+
+    private void updateTotalBookCopiesCountAndPagination() {
+        totalBookCopies = bookCopyRepo.countAll();
+        int pageCount = (totalBookCopies + ROWS_PER_PAGE - 1) / ROWS_PER_PAGE;
+        bookCopyPagination.setPageCount(pageCount == 0 ? 1 : pageCount);
+    }
+
+    private void clearBookCopies() {
+        bookCopyList.clear();
+        bookCopyTable.setItems(bookCopyList);
+        bookCopyPagination.setPageCount(1);
+    }
+
+    // Load inventories list for Inventory table
+    private void loadInventories() {
         List<Inventory> inventories = inventoryRepo.findAll();
         inventoryList.setAll(inventories);
         inventoryTable.setItems(inventoryList);
-
-        List<BookCopy> copies = bookCopyRepo.findAll();
-        bookCopyList.setAll(copies);
-        bookCopyTable.setItems(bookCopyList);
     }
 
-    // ========== BookTitle handlers ==========
+    // ===========================
+    // ========== Handlers =======
+    // ===========================
 
     @FXML
     public void handleAddBookTitle() {
@@ -173,7 +228,8 @@ public class BookManagementController {
                 BookTitle newBookTitle = controller.getBookTitle();
                 boolean success = bookTitleRepo.insert(newBookTitle);
                 if (success) {
-                    loadBookTitles();
+                    updateTotalBookTitlesCountAndPagination();
+                    pagination.setCurrentPageIndex(0);
                     showInfo("Thêm đầu sách thành công.");
                 } else {
                     showError("Thêm đầu sách thất bại.");
@@ -214,7 +270,8 @@ public class BookManagementController {
                 BookTitle updatedBookTitle = controller.getBookTitle();
                 boolean success = bookTitleRepo.update(updatedBookTitle);
                 if (success) {
-                    loadBookTitles();
+                    updateTotalBookTitlesCountAndPagination();
+                    pagination.setCurrentPageIndex(0);
                     showInfo("Sửa đầu sách thành công.");
                 } else {
                     showError("Sửa đầu sách thất bại.");
@@ -236,15 +293,16 @@ public class BookManagementController {
         boolean confirmed = confirmDialog("Bạn có chắc muốn xóa đầu sách này?");
         if (confirmed) {
             if (bookTitleRepo.delete(selected.getTitleId())) {
+                updateTotalBookTitlesCountAndPagination();
+                pagination.setCurrentPageIndex(0);
                 showInfo("Xóa đầu sách thành công.");
-                loadData();
+                loadInventories();
+                clearBookCopies();
             } else {
                 showWarning("Xóa đầu sách thất bại.");
             }
         }
     }
-
-    // ========== Inventory handlers ==========
 
     @FXML
     public void handleAddInventory() {
@@ -334,20 +392,15 @@ public class BookManagementController {
         if (confirmed) {
             if (inventoryRepo.delete(selected.getInventoryId())) {
                 showInfo("Xóa kho thành công.");
-                loadData();
+                loadInventories();
+                clearBookCopies();
             } else {
                 showWarning("Xóa kho thất bại.");
             }
         }
     }
 
-    private void loadInventories() {
-        List<Inventory> inventories = inventoryRepo.findAll();
-        ObservableList<Inventory> inventoryList = FXCollections.observableArrayList(inventories);
-        inventoryTable.setItems(inventoryList);
-    }
-
-    // ========== BookCopy handlers ==========
+    // BookCopy CRUD handlers
 
     @FXML
     public void handleAddBookCopy() {
@@ -379,7 +432,8 @@ public class BookManagementController {
                 BookCopy newCopy = controller.getBookCopy();
                 boolean success = bookCopyRepo.insert(newCopy);
                 if (success) {
-                    loadBookCopies();
+                    updateTotalBookCopiesCountAndPagination();
+                    bookCopyPagination.setCurrentPageIndex(0);
                     showInfo("Thêm bản sao sách thành công.");
                 } else {
                     showError("Thêm bản sao sách thất bại.");
@@ -420,7 +474,8 @@ public class BookManagementController {
                 BookCopy updatedCopy = controller.getBookCopy();
                 boolean success = bookCopyRepo.update(updatedCopy);
                 if (success) {
-                    loadBookCopies();
+                    updateTotalBookCopiesCountAndPagination();
+                    bookCopyPagination.setCurrentPageIndex(0);
                     showInfo("Sửa bản sao sách thành công.");
                 } else {
                     showError("Sửa bản sao sách thất bại.");
@@ -442,21 +497,19 @@ public class BookManagementController {
         boolean confirmed = confirmDialog("Bạn có chắc muốn xóa bản sao sách này?");
         if (confirmed) {
             if (bookCopyRepo.delete(selected.getCopyId())) {
+                updateTotalBookCopiesCountAndPagination();
+                bookCopyPagination.setCurrentPageIndex(0);
                 showInfo("Xóa bản sao thành công.");
-                loadData();
+                loadInventories();
             } else {
                 showWarning("Xóa bản sao thất bại.");
             }
         }
     }
 
-    private void loadBookCopies() {
-        List<BookCopy> copies = bookCopyRepo.findAll();
-        ObservableList<BookCopy> copyList = FXCollections.observableArrayList(copies);
-        bookCopyTable.setItems(copyList);
-    }
-
-    // === Helper dialog methods ===
+    // ===========================
+    // ========== Helpers ========
+    // ===========================
 
     private void showInfo(String msg) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);

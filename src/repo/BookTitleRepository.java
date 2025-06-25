@@ -5,6 +5,7 @@ import util.DBConnection;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class BookTitleRepository {
@@ -39,6 +40,112 @@ public class BookTitleRepository {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public List<BookTitle> findByGenres(List<String> genres) {
+        if (genres == null || genres.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String placeholders = String.join(",", Collections.nCopies(genres.size(), "?"));
+        String sql = "SELECT * FROM book_title WHERE genre IN (" + placeholders + ")";
+
+        List<BookTitle> result = new ArrayList<>();
+
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            for (int i = 0; i < genres.size(); i++) {
+                stmt.setString(i + 1, genres.get(i));
+            }
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                BookTitle book = new BookTitle();
+                book.setTitleId(rs.getInt("title_id"));
+                book.setTitleName(rs.getString("title_name"));
+                book.setAuthor(rs.getString("author"));
+                book.setGenre(rs.getString("genre"));
+                book.setPublisher(rs.getString("publisher"));
+                book.setPublishYear(rs.getInt("publish_year"));
+                result.add(book);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+    public List<BookTitle> findPage(int offset, int limit) {
+        List<BookTitle> list = new ArrayList<>();
+        String sql = "SELECT * FROM book_title ORDER BY title_id LIMIT ? OFFSET ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, limit);
+            stmt.setInt(2, offset);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToBookTitle(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public List<BookTitle> searchPageByTitleOrAuthor(String keyword, int offset, int limit) {
+        List<BookTitle> list = new ArrayList<>();
+        String sql = "SELECT * FROM book_title WHERE title_name ILIKE ? OR author ILIKE ? ORDER BY title_id LIMIT ? OFFSET ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            String kw = "%" + keyword + "%";
+            stmt.setString(1, kw);
+            stmt.setString(2, kw);
+            stmt.setInt(3, limit);
+            stmt.setInt(4, offset);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToBookTitle(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public int countAll() {
+        String sql = "SELECT COUNT(*) FROM book_title";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int countSearchByTitleOrAuthor(String keyword) {
+        String sql = "SELECT COUNT(*) FROM book_title WHERE title_name ILIKE ? OR author ILIKE ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            String kw = "%" + keyword + "%";
+            stmt.setString(1, kw);
+            stmt.setString(2, kw);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     public List<BookTitle> searchByKeyword(String keyword) {

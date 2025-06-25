@@ -59,6 +59,40 @@ public class LoanRepository {
         return list;
     }
 
+    public List<String> findFavoriteGenresByReaderIdWithinMonths(int readerId, int months) {
+        String sql = """
+            SELECT bt.genre, COUNT(*) as borrow_count
+            FROM loan l
+            JOIN loan_detail ld ON l.loan_id = ld.loan_id
+            JOIN book_copy bc ON ld.copy_id = bc.copy_id
+            JOIN book_title bt ON bc.title_id = bt.title_id
+            WHERE l.reader_id = ?
+            AND l.loan_date >= CURRENT_DATE - (? * INTERVAL '1 month')
+            GROUP BY bt.genre
+            ORDER BY borrow_count DESC
+            LIMIT 3
+        """;
+
+        List<String> favoriteGenres = new ArrayList<>();
+
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, readerId);
+            stmt.setInt(2, months);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    favoriteGenres.add(rs.getString("genre"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return favoriteGenres;
+    }
+
     public boolean insert(Loan loan) {
         String sql = "INSERT INTO loan(loan_date, due_date, reader_id) VALUES (?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
