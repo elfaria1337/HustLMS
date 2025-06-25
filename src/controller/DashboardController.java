@@ -6,6 +6,9 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
+import model.Staff;
+import repo.LoanRepository;
+import repo.StaffRepository;
 
 import java.io.IOException;
 
@@ -19,6 +22,11 @@ public class DashboardController {
 
     @FXML private StackPane contentPane;
     @FXML private Label defaultDashboardLabel;
+
+    private int currentStaffId;
+
+    @FXML
+    private Label lblWelcome;
 
     @FXML
     public void initialize() {
@@ -40,5 +48,29 @@ public class DashboardController {
             defaultDashboardLabel.setText("Không thể tải trang: " + fxmlPath);
             defaultDashboardLabel.setVisible(true);
         }
+    }
+
+    public void setCurrentStaffId(Integer id) {
+        this.currentStaffId = id;
+        loadStaffProfile();
+        loadDashboardStats();
+    }
+
+    private void loadStaffProfile() {
+        StaffRepository staffRepo = new StaffRepository();
+        Staff staff = staffRepo.findById(currentStaffId);
+        if (staff != null) {
+            lblWelcome.setText("Xin chào, " + staff.getFullName() + "!");
+        } else {
+            lblWelcome.setText("Xin chào nhân viên!");
+        }
+    }
+
+    private void loadDashboardStats() {
+        // Ví dụ thống kê tổng số phiếu mượn hôm nay
+        LoanRepository loanRepo = new LoanRepository();
+        int todayLoans = loanRepo.countLoansToday();
+        System.out.println("Số phiếu mượn hôm nay: " + todayLoans);
+        // Bạn có thể hiện thị thống kê này trong giao diện dashboard
     }
 }

@@ -8,7 +8,7 @@ import javafx.stage.Stage;
 public class MainApp extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/res/view/reader/dashboard_reader.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/res/view/login.fxml"));
         Scene scene = new Scene(loader.load());
         primaryStage.setTitle("Thư viện");
         primaryStage.setScene(scene);

@@ -4,6 +4,7 @@ import model.Loan;
 import util.DBConnection;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -156,5 +157,42 @@ public class LoanRepository {
         loan.setDueDate(rs.getDate("due_date").toLocalDate());
         loan.setReaderId(rs.getInt("reader_id"));
         return loan;
+    }
+
+    public int countLoansToday() {
+        String sql = "SELECT COUNT(*) FROM loan WHERE loan_date = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDate(1, Date.valueOf(LocalDate.now()));
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int countActiveLoansByReader(int readerId) {
+        String sql = """
+            SELECT COUNT(DISTINCT l.loan_id)
+            FROM loan l
+            JOIN loan_detail ld ON l.loan_id = ld.loan_id
+            WHERE l.reader_id = ? AND ld.return_date IS NULL
+        """;
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, readerId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 }

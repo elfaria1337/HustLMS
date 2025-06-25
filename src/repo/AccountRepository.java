@@ -44,11 +44,21 @@ public class AccountRepository {
     public Account findByUsername(String username) {
         String sql = "SELECT * FROM account WHERE username = ?";
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, username);
-            try(ResultSet rs = stmt.executeQuery()) {
+            try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return mapResultSetToAccount(rs);
+                    Account acc = new Account();
+                    acc.setAccountId(rs.getInt("account_id"));
+                    acc.setUsername(rs.getString("username"));
+                    acc.setPassword(rs.getString("password"));
+                    acc.setRole(rs.getString("role"));
+                    acc.setStatus(rs.getString("status"));
+                    int readerId = rs.getInt("reader_id");
+                    if (!rs.wasNull()) acc.setReaderId(readerId);
+                    int staffId = rs.getInt("staff_id");
+                    if (!rs.wasNull()) acc.setStaffId(staffId);
+                    return acc;
                 }
             }
         } catch (SQLException e) {

@@ -11,10 +11,13 @@ public class BookCopyRepository {
 
     public List<BookCopy> findAll() {
         List<BookCopy> list = new ArrayList<>();
-        String sql = "SELECT * FROM book_copy ORDER BY copy_id";
+        String sql = "SELECT bc.*, i.location_name " +
+                    "FROM book_copy bc " +
+                    "LEFT JOIN inventory i ON bc.inventory_id = i.inventory_id " +
+                    "ORDER BY bc.copy_id";
         try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 BookCopy copy = mapResultSetToBookCopy(rs);
                 list.add(copy);
