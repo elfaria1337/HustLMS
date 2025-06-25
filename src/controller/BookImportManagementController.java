@@ -35,8 +35,7 @@ public class BookImportManagementController {
     @FXML private TableColumn<Supplier, String> colEmail;
     @FXML private TableColumn<Supplier, String> colAddress;
     @FXML private TableColumn<Supplier, String> colContactPerson;
-    @FXML
-    private TextField searchSupplierField;
+    @FXML private TextField searchSupplierField;
     private FilteredList<Supplier> filteredSuppliers;
 
     // BookImport
@@ -54,6 +53,16 @@ public class BookImportManagementController {
     @FXML private TableColumn<BookImportDetail, String> colTitleName;
     @FXML private TableColumn<BookImportDetail, String> colImportRef;
 
+    // Phân trang cho BookImport
+    @FXML private Button btnPrevBookImport;
+    @FXML private Button btnNextBookImport;
+    @FXML private Label lblPageBookImport;
+
+    // Phân trang cho BookImportDetail
+    @FXML private Button btnPrevBookImportDetail;
+    @FXML private Button btnNextBookImportDetail;
+    @FXML private Label lblPageBookImportDetail;
+
     // Repositories
     private SupplierRepository supplierRepo = new SupplierRepository();
     private BookImportRepository bookImportRepo = new BookImportRepository();
@@ -65,6 +74,15 @@ public class BookImportManagementController {
     private ObservableList<BookImportDetail> bookImportDetailList = FXCollections.observableArrayList();
 
     private DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    // Phân trang
+    private static final int PAGE_SIZE = 15;
+
+    private int currentBookImportPage = 1;
+    private int totalBookImportPages = 1;
+
+    private int currentBookImportDetailPage = 1;
+    private int totalBookImportDetailPages = 1;
 
     @FXML
     public void initialize() {
@@ -102,25 +120,17 @@ public class BookImportManagementController {
             return new ReadOnlyObjectWrapper<>(b != null ? String.valueOf(b.getImportId()) : "N/A");
         });
 
-        loadData();
-
-        // Load data từ repo (giả sử supplierRepo đã có)
+        // Load suppliers
         supplierList.setAll(supplierRepo.findAll());
-
-        // Tạo FilteredList
         filteredSuppliers = new FilteredList<>(supplierList, p -> true);
-
-        // Set FilteredList làm data cho TableView
         supplierTable.setItems(filteredSuppliers);
 
-        // Thêm listener vào ô tìm kiếm
         searchSupplierField.textProperty().addListener((observable, oldValue, newValue) -> {
             filteredSuppliers.setPredicate(supplier -> {
                 if (newValue == null || newValue.isEmpty()) {
                     return true;
                 }
                 String lowerCaseFilter = newValue.toLowerCase();
-
                 if (supplier.getCompanyName() != null && supplier.getCompanyName().toLowerCase().contains(lowerCaseFilter)) {
                     return true;
                 }
@@ -130,20 +140,118 @@ public class BookImportManagementController {
                 return false;
             });
         });
+
+        // Load dữ liệu BookImport và BookImportDetail
+        loadData();
     }
 
     private void loadData() {
-
+        // Load toàn bộ danh sách
         List<BookImport> imports = bookImportRepo.findAll();
         bookImportList.setAll(imports);
-        bookImportTable.setItems(bookImportList);
 
         List<BookImportDetail> details = bookImportDetailRepo.findAll();
         bookImportDetailList.setAll(details);
-        bookImportDetailTable.setItems(bookImportDetailList);
+
+        // Reset trang hiện tại
+        currentBookImportPage = 1;
+        currentBookImportDetailPage = 1;
+
+        updateBookImportTable();
+        updateBookImportDetailTable();
     }
 
-    // ========== Supplier handlers ==========
+    // ===== Phân trang BookImport =====
+    private void updateBookImportTable() {
+        int totalRecords = bookImportList.size();
+        totalBookImportPages = (int) Math.ceil((double) totalRecords / PAGE_SIZE);
+        if (totalBookImportPages == 0) totalBookImportPages = 1;
+        if (currentBookImportPage > totalBookImportPages) {
+            currentBookImportPage = totalBookImportPages;
+        }
+        if (currentBookImportPage < 1) {
+            currentBookImportPage = 1;
+        }
+        int fromIndex = (currentBookImportPage - 1) * PAGE_SIZE;
+        int toIndex = Math.min(fromIndex + PAGE_SIZE, totalRecords);
+        List<BookImport> pageItems = bookImportList.subList(fromIndex, toIndex);
+        bookImportTable.setItems(FXCollections.observableArrayList(pageItems));
+
+        lblPageBookImport.setText("Trang " + currentBookImportPage + " / " + totalBookImportPages);
+
+        btnPrevBookImport.setDisable(currentBookImportPage <= 1);
+        btnNextBookImport.setDisable(currentBookImportPage >= totalBookImportPages);
+    }
+
+    @FXML
+    private void handlePrevBookImport() {
+        if (currentBookImportPage > 1) {
+            currentBookImportPage--;
+            updateBookImportTable();
+        }
+    }
+
+    @FXML
+    private void handleNextBookImport() {
+        if (currentBookImportPage < totalBookImportPages) {
+            currentBookImportPage++;
+            updateBookImportTable();
+        }
+    }
+
+    private void loadBookImports() {
+        List<BookImport> imports = bookImportRepo.findAll();
+        bookImportList.setAll(imports);
+        currentBookImportPage = 1;
+        updateBookImportTable();
+    }
+
+    // ===== Phân trang BookImportDetail =====
+    private void updateBookImportDetailTable() {
+        int totalRecords = bookImportDetailList.size();
+        totalBookImportDetailPages = (int) Math.ceil((double) totalRecords / PAGE_SIZE);
+        if (totalBookImportDetailPages == 0) totalBookImportDetailPages = 1;
+        if (currentBookImportDetailPage > totalBookImportDetailPages) {
+            currentBookImportDetailPage = totalBookImportDetailPages;
+        }
+        if (currentBookImportDetailPage < 1) {
+            currentBookImportDetailPage = 1;
+        }
+        int fromIndex = (currentBookImportDetailPage - 1) * PAGE_SIZE;
+        int toIndex = Math.min(fromIndex + PAGE_SIZE, totalRecords);
+        List<BookImportDetail> pageItems = bookImportDetailList.subList(fromIndex, toIndex);
+        bookImportDetailTable.setItems(FXCollections.observableArrayList(pageItems));
+
+        lblPageBookImportDetail.setText("Trang " + currentBookImportDetailPage + " / " + totalBookImportDetailPages);
+
+        btnPrevBookImportDetail.setDisable(currentBookImportDetailPage <= 1);
+        btnNextBookImportDetail.setDisable(currentBookImportDetailPage >= totalBookImportDetailPages);
+    }
+
+    @FXML
+    private void handlePrevBookImportDetail() {
+        if (currentBookImportDetailPage > 1) {
+            currentBookImportDetailPage--;
+            updateBookImportDetailTable();
+        }
+    }
+
+    @FXML
+    private void handleNextBookImportDetail() {
+        if (currentBookImportDetailPage < totalBookImportDetailPages) {
+            currentBookImportDetailPage++;
+            updateBookImportDetailTable();
+        }
+    }
+
+    private void loadBookImportDetails() {
+        List<BookImportDetail> details = bookImportDetailRepo.findAll();
+        bookImportDetailList.setAll(details);
+        currentBookImportDetailPage = 1;
+        updateBookImportDetailTable();
+    }
+
+    // ===== Supplier handlers =====
     @FXML
     private void handleAddSupplier() {
         try {
@@ -165,8 +273,8 @@ public class BookImportManagementController {
 
             if (controller.isSaveClicked()) {
                 Supplier newSupplier = controller.getSupplier();
-                if (supplierRepo.insert(newSupplier)) { // supplierRepo là repository của Supplier
-                    loadSuppliers(); // Hàm làm mới TableView
+                if (supplierRepo.insert(newSupplier)) {
+                    loadSuppliers();
                 } else {
                     showAlert("Lỗi", "Không thể lưu nhà cung cấp mới.");
                 }
@@ -197,14 +305,14 @@ public class BookImportManagementController {
 
             SupplierFormController controller = loader.getController();
             controller.setDialogStage(dialogStage);
-            controller.setSupplier(selected); // Truyền đối tượng được chọn vào form
+            controller.setSupplier(selected);
 
             dialogStage.showAndWait();
 
             if (controller.isSaveClicked()) {
                 Supplier updatedSupplier = controller.getSupplier();
                 if (supplierRepo.update(updatedSupplier)) {
-                    loadSuppliers(); // Làm mới danh sách
+                    loadSuppliers();
                 } else {
                     showAlert("Lỗi", "Không thể cập nhật nhà cung cấp.");
                 }
@@ -225,21 +333,20 @@ public class BookImportManagementController {
         if (confirmed) {
             if (supplierRepo.delete(selected.getSupplierId())) {
                 showInfo("Xóa nhà cung cấp thành công.");
-                loadData();
+                loadSuppliers();
             } else {
                 showWarning("Xóa nhà cung cấp thất bại.");
             }
         }
     }
 
-    // Hàm load lại danh sách suppliers và đổ vào TableView
     private void loadSuppliers() {
         List<Supplier> list = supplierRepo.findAll();
         supplierList.setAll(list);
         supplierTable.setItems(supplierList);
     }
 
-    // ========== BookImport handlers ==========
+    // ===== BookImport handlers =====
     @FXML
     public void handleAddBookImport() {
         try {
@@ -257,14 +364,14 @@ public class BookImportManagementController {
 
             BookImportFormController controller = loader.getController();
             controller.setDialogStage(dialogStage);
-            controller.setBookImport(null); // Tạo mới phiếu nhập
+            controller.setBookImport(null);
 
             dialogStage.showAndWait();
 
             if (controller.isSaveClicked()) {
                 BookImport newImport = controller.getBookImport();
-                if (bookImportRepo.insert(newImport)) { // gọi repo insert để lưu
-                    loadBookImports(); // tải lại dữ liệu bảng
+                if (bookImportRepo.insert(newImport)) {
+                    loadBookImports();
                 } else {
                     showAlert("Lỗi", "Lưu phiếu nhập thất bại.");
                 }
@@ -298,14 +405,14 @@ public class BookImportManagementController {
 
             BookImportFormController controller = loader.getController();
             controller.setDialogStage(dialogStage);
-            controller.setBookImport(selected); // truyền phiếu nhập được chọn vào form
+            controller.setBookImport(selected);
 
             dialogStage.showAndWait();
 
             if (controller.isSaveClicked()) {
                 BookImport updatedImport = controller.getBookImport();
-                if (bookImportRepo.update(updatedImport)) { // gọi repo update để lưu
-                    loadBookImports(); // tải lại dữ liệu bảng
+                if (bookImportRepo.update(updatedImport)) {
+                    loadBookImports();
                 } else {
                     showAlert("Lỗi", "Cập nhật phiếu nhập thất bại.");
                 }
@@ -333,46 +440,40 @@ public class BookImportManagementController {
         }
     }
 
-    private void loadBookImports() {
-        List<BookImport> imports = bookImportRepo.findAll(); // Lấy dữ liệu từ repo
-        bookImportList.setAll(imports);
-        bookImportTable.setItems(bookImportList);
-    }
+    // ===== BookImportDetail handlers =====
+    @FXML
+    public void handleAddBookImportDetail() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/res/view/book_import_detail_form.fxml"));
+            Parent page = loader.load();
 
-    // ========== BookImportDetail handlers ==========
-@FXML
-public void handleAddBookImportDetail() {
-    try {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/res/view/book_import_detail_form.fxml"));
-        Parent page = loader.load();
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Thêm chi tiết nhập sách");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(bookImportDetailTable.getScene().getWindow());
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+            dialogStage.setWidth(400);
 
-        Stage dialogStage = new Stage();
-        dialogStage.setTitle("Thêm chi tiết nhập sách");
-        dialogStage.initModality(Modality.WINDOW_MODAL);
-        dialogStage.initOwner(bookImportDetailTable.getScene().getWindow());
-        Scene scene = new Scene(page);
-        dialogStage.setScene(scene);
-        dialogStage.setWidth(400);
+            BookImportDetailFormController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            controller.setBookImportDetail(null);
 
-        BookImportDetailFormController controller = loader.getController();
-        controller.setDialogStage(dialogStage);
-        controller.setBookImportDetail(null); // Tạo mới
+            dialogStage.showAndWait();
 
-        dialogStage.showAndWait();
-
-        if (controller.isSaveClicked()) {
-            BookImportDetail newDetail = controller.getBookImportDetail();
-            if (bookImportDetailRepo.insert(newDetail)) {
-                loadBookImportDetails(); // Reload bảng
-            } else {
-                showAlert("Lỗi", "Lưu chi tiết nhập sách thất bại.");
+            if (controller.isSaveClicked()) {
+                BookImportDetail newDetail = controller.getBookImportDetail();
+                if (bookImportDetailRepo.insert(newDetail)) {
+                    loadBookImportDetails();
+                } else {
+                    showAlert("Lỗi", "Lưu chi tiết nhập sách thất bại.");
+                }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Lỗi", "Không thể mở cửa sổ thêm chi tiết nhập sách.");
         }
-    } catch (IOException e) {
-        e.printStackTrace();
-        showAlert("Lỗi", "Không thể mở cửa sổ thêm chi tiết nhập sách.");
     }
-}
 
     @FXML
     public void handleEditBookImportDetail() {
@@ -395,14 +496,14 @@ public void handleAddBookImportDetail() {
 
             BookImportDetailFormController controller = loader.getController();
             controller.setDialogStage(dialogStage);
-            controller.setBookImportDetail(selected); // Truyền đối tượng đã chọn
+            controller.setBookImportDetail(selected);
 
             dialogStage.showAndWait();
 
             if (controller.isSaveClicked()) {
                 BookImportDetail updatedDetail = controller.getBookImportDetail();
                 if (bookImportDetailRepo.update(updatedDetail)) {
-                    loadBookImportDetails(); // Reload bảng
+                    loadBookImportDetails();
                 } else {
                     showAlert("Lỗi", "Cập nhật chi tiết nhập sách thất bại.");
                 }
@@ -430,13 +531,7 @@ public void handleAddBookImportDetail() {
         }
     }
 
-    private void loadBookImportDetails() {
-        List<BookImportDetail> details = bookImportDetailRepo.findAll();
-        bookImportDetailList.setAll(details);
-        bookImportDetailTable.setItems(bookImportDetailList);
-    }
-
-    // === Helper methods ===
+    // ===== Helper methods =====
 
     private void showInfo(String msg) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -452,7 +547,6 @@ public void handleAddBookImportDetail() {
         alert.showAndWait();
     }
 
-    // Hàm hiển thị thông báo lỗi hoặc thông tin dạng Alert
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
